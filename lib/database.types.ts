@@ -1,0 +1,144 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          updated_at: string | null
+          username: string | null
+          full_name: string | null
+          avatar_url: string | null
+          website: string | null
+          email: string | null
+          role: string
+        }
+        Insert: {
+          id: string
+          updated_at?: string | null
+          username?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          website?: string | null
+          email?: string | null
+          role?: string
+        }
+        Update: {
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          website?: string | null
+          email?: string | null
+          role?: string
+        }
+      }
+      user_settings: {
+        Row: {
+          id: string
+          updated_at: string | null
+          theme: string
+          notifications_enabled: boolean
+          language: string
+        }
+        Insert: {
+          id: string
+          updated_at?: string | null
+          theme?: string
+          notifications_enabled?: boolean
+          language?: string
+        }
+        Update: {
+          id?: string
+          updated_at?: string | null
+          theme?: string
+          notifications_enabled?: boolean
+          language?: string
+        }
+      }
+      chats: {
+        Row: {
+          id: string
+          user_id: string
+          agent_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          agent_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          agent_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          chat_id: string
+          role: "user" | "assistant"
+          content: string
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          chat_id: string
+          role: "user" | "assistant"
+          content: string
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          chat_id?: string
+          role?: "user" | "assistant"
+          content?: string
+          timestamp?: string
+        }
+      }
+      notes: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+  }
+}
