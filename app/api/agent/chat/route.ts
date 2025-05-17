@@ -5,18 +5,29 @@ const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("[SERVER] Received request to /api/agent/chat")
+
     const { agent_config, task, history } = await request.json()
+
+    console.log("[SERVER] Request payload:", {
+      agent_name: agent_config?.agent_name,
+      task_length: task?.length,
+      task_preview: task?.substring(0, 50) + "...",
+      history_length: history?.length,
+    })
 
     // Get the API key from environment variables
     const apiKey = process.env.SWARMS_API_KEY
 
     if (!apiKey) {
-      console.error("SWARMS_API_KEY is not configured")
+      console.error("[SERVER] SWARMS_API_KEY is not configured")
       return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
     }
 
+    console.log("[SERVER] API key is configured")
+
     // Log the history being sent to the API
-    console.log("Making request to Swarms API with:", {
+    console.log("[SERVER] Making request to Swarms API with:", {
       url: `${SWARMS_API_URL}/v1/agent/completions`,
       agent_name: agent_config?.agent_name,
       task_length: task?.length,
@@ -34,6 +45,8 @@ export async function POST(request: NextRequest) {
       payload.history = history
     }
 
+    console.log("[SERVER] Full payload to Swarms API:", JSON.stringify(payload))
+
     const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
       headers: {
@@ -43,34 +56,49 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(payload),
     })
 
+    console.log("[SERVER] Swarms API response status:", response.status)
+
     if (!response.ok) {
       const errorText = await response.text()
-      console.error("Swarms API error:", errorText)
+      console.error("[SERVER] Swarms API error:", errorText)
       return NextResponse.json({ error: `Swarms API error: ${errorText}` }, { status: response.status })
     }
 
     const data = await response.json()
-    console.log("Swarms API response structure:", Object.keys(data))
+    console.log("[SERVER] Swarms API response structure:", {
+      keys: Object.keys(data),
+      id: data.id,
+      success: data.success,
+      name: data.name,
+      outputsLength: data.outputs?.length,
+    })
+
+    // Log the full response for debugging
+    console.log("[SERVER] Full Swarms API response:", JSON.stringify(data))
 
     // Process the response to make it easier to use on the client
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
       // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
+      console.log("[SERVER] Found output content:", {
+        content: lastOutput?.content?.substring(0, 100) + "...",
+      })
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
     } else if (data && data.success === true) {
       // API call was successful but no outputs were returned
-      console.log("API returned success but no outputs:", data)
+      console.log("[SERVER] API returned success but no outputs:", data)
       data.processedOutput = "The agent is processing your request. Please try again in a moment."
     } else {
-      console.error("Unexpected API response structure:", data)
+      console.error("[SERVER] Unexpected API response structure:", data)
       data.processedOutput = "Received an unexpected response format from the API."
     }
 
+    console.log("[SERVER] Returning processed response to client")
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error in agent chat API:", error)
+    console.error("[SERVER] Error in agent chat API:", error)
     return NextResponse.json(
       {
         error: "Internal server error",

@@ -14,7 +14,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
         content: msg.content,
       }))
 
-    console.log("Sending chat with history:", {
+    console.log("[CLIENT] Sending chat with history:", {
       agent_name: agent.name,
       message_length: message.length,
       history_length: historyFormatted.length,
@@ -37,10 +37,10 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
       // Remove the history parameter
     }
 
-    console.log("Sending request to chat API:", {
+    console.log("[CLIENT] Sending request to chat API:", {
       agent_name: agent.name,
       message_length: message.length,
-      history_length: historyFormatted.length,
+      payload: JSON.stringify(payload),
     })
 
     const response = await fetch("/api/agent/chat", {
@@ -51,28 +51,40 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
       body: JSON.stringify(payload),
     })
 
+    console.log("[CLIENT] Received response from chat API with status:", response.status)
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      console.error("[CLIENT] Error response from chat API:", errorData)
       throw new Error(`API error: ${response.status} - ${errorData.error || "Unknown error"}`)
     }
 
     const data = await response.json()
+    console.log("[CLIENT] Parsed response data:", {
+      keys: Object.keys(data),
+      success: data.success,
+      outputsLength: data.outputs?.length,
+      processedOutput: data.processedOutput?.substring(0, 100) + "...",
+    })
 
     // Check if the API response has the expected structure
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
       // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
+      console.log("[CLIENT] Found output content:", {
+        content: lastOutput?.content?.substring(0, 100) + "...",
+      })
       return lastOutput?.content || "No content found in response"
     } else if (data && data.success === true) {
       // API call was successful but no outputs were returned
-      console.log("API returned success but no outputs:", data)
+      console.log("[CLIENT] API returned success but no outputs:", data)
       return "The agent is processing your request. Please try again in a moment."
     } else {
-      console.error("Unexpected API response structure:", data)
+      console.error("[CLIENT] Unexpected API response structure:", data)
       return "Received an unexpected response format from the API."
     }
   } catch (error) {
-    console.error("Error chatting with agent:", error)
+    console.error("[CLIENT] Error chatting with agent:", error)
     throw error
   }
 }
@@ -93,7 +105,7 @@ export async function streamChatWithAgent(
         content: msg.content,
       }))
 
-    console.log("Streaming chat with history:", {
+    console.log("[CLIENT] Streaming chat with history:", {
       agent_name: agent.name,
       message_length: message.length,
       history_length: historyFormatted.length,
@@ -116,10 +128,10 @@ export async function streamChatWithAgent(
       // Remove the history parameter
     }
 
-    console.log("Sending request to stream API:", {
+    console.log("[CLIENT] Sending request to stream API:", {
       agent_name: agent.name,
       message_length: message.length,
-      history_length: historyFormatted.length,
+      payload: JSON.stringify(payload),
     })
 
     // Use the stream endpoint directly
@@ -131,9 +143,16 @@ export async function streamChatWithAgent(
       body: JSON.stringify(payload),
     })
 
+    console.log("[CLIENT] Received response from stream API with status:", response.status)
+    console.log("[CLIENT] Response headers:", {
+      contentType: response.headers.get("Content-Type"),
+      contentLength: response.headers.get("Content-Length"),
+    })
+
     if (!response.ok) {
       // Try to parse error response
       const errorText = await response.text()
+      console.error("[CLIENT] Error response from stream API:", errorText)
       try {
         const errorJson = JSON.parse(errorText)
         throw new Error(`API error: ${response.status} - ${errorJson.error || "Unknown error"}`)
@@ -145,16 +164,23 @@ export async function streamChatWithAgent(
     // Check if the response is JSON (error) instead of a stream
     const contentType = response.headers.get("Content-Type") || ""
     if (contentType.includes("application/json")) {
+      console.warn("[CLIENT] Received JSON instead of stream, parsing as error")
       const errorData = await response.json()
+      console.error("[CLIENT] JSON error data:", errorData)
       throw new Error(`API returned JSON instead of stream: ${errorData.error || "Unknown error"}`)
     }
 
+    console.log("[CLIENT] Starting to read stream")
     // Process the stream directly
     const reader = response.body?.getReader()
-    if (!reader) throw new Error("Response body is null")
+    if (!reader) {
+      console.error("[CLIENT] Response body is null")
+      throw new Error("Response body is null")
+    }
 
     const decoder = new TextDecoder()
     let done = false
+    let totalReceived = 0
 
     while (!done) {
       const { value, done: doneReading } = await reader.read()
@@ -162,11 +188,15 @@ export async function streamChatWithAgent(
 
       if (value) {
         const chunk = decoder.decode(value, { stream: true })
+        totalReceived += chunk.length
+        console.log(`[CLIENT] Received chunk (${chunk.length} chars): "${chunk.substring(0, 20)}..."`)
         onChunk(chunk)
       }
     }
+
+    console.log(`[CLIENT] Stream complete, received ${totalReceived} total characters`)
   } catch (error) {
-    console.error("Error streaming chat with agent:", error)
+    console.error("[CLIENT] Error streaming chat with agent:", error)
     throw error
   }
 }
