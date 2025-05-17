@@ -130,68 +130,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      medical_profiles: {
-        Row: {
-          id: string
-          user_id: string
-          first_name: string
-          last_name: string
-          date_of_birth: string
-          gender: string
-          height_cm: number | null
-          weight_kg: number | null
-          blood_type: string | null
-          allergies: string[]
-          chronic_conditions: string[]
-          current_medications: string[]
-          surgical_history: Json
-          family_medical_history: Json
-          lifestyle_info: Json
-          emergency_contact: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          first_name: string
-          last_name: string
-          date_of_birth: string
-          gender: string
-          height_cm: number | null
-          weight_kg: number | null
-          blood_type: string | null
-          allergies: string[]
-          chronic_conditions: string[]
-          current_medications: string[]
-          surgical_history: Json
-          family_medical_history: Json
-          lifestyle_info: Json
-          emergency_contact: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          first_name?: string
-          last_name?: string
-          date_of_birth?: string
-          gender?: string
-          height_cm?: number | null
-          weight_kg?: number | null
-          blood_type?: string | null
-          allergies?: string[]
-          chronic_conditions?: string[]
-          current_medications?: string[]
-          surgical_history?: Json
-          family_medical_history?: Json
-          lifestyle_info?: Json
-          emergency_contact?: Json
-          created_at?: string
-          updated_at?: string
-        }
-      }
     }
     Views: {
       [_ in never]: never

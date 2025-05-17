@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Grid3x3, MessageSquare, FileText, Bell, Menu, X, Home, User, FileBarChart } from "lucide-react"
+import { Grid3x3, MessageSquare, FileText, Bell, Menu, X, Home, User, UserCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { UserMenu } from "@/components/user-menu"
 import { useAuth } from "@/contexts/auth-context"
@@ -51,16 +51,16 @@ const Navigation = () => {
       public: true,
     },
     {
-      name: "Medical Profile",
-      path: "/profile/medical",
-      icon: <FileBarChart className="h-5 w-5" />,
+      name: "Profile",
+      path: "/profile",
+      icon: <User className="h-5 w-5" />,
       requiresAuth: true,
       mobileOnly: true,
     },
     {
-      name: "Profile",
-      path: "/profile",
-      icon: <User className="h-5 w-5" />,
+      name: "Medical Profile",
+      path: "/onboarding",
+      icon: <UserCircle className="h-5 w-5" />,
       requiresAuth: true,
       mobileOnly: true,
     },

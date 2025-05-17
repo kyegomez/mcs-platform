@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, LogOut } from "lucide-react"
 import { LoginSuccessAnimation } from "@/components/auth/login-success-animation"
-import { MedicalProfilePrompt } from "@/components/medical-profile-prompt"
 import Link from "next/link"
 
 export default function DashboardPage() {
@@ -64,8 +63,6 @@ export default function DashboardPage() {
           </h1>
           <p className="text-mcs-gray-light">Your personal healthcare dashboard</p>
         </div>
-
-        <MedicalProfilePrompt />
 
         <Card className="bg-black border-mcs-gray">
           <CardHeader>

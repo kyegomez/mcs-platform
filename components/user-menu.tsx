@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Settings, LogOut, Loader2, UserCircle, FileBarChart } from "lucide-react"
+import { User, Settings, LogOut, Loader2, UserCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -61,12 +61,6 @@ export function UserMenu() {
           <Link href="/dashboard" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/profile/medical" className="cursor-pointer">
-            <FileBarChart className="mr-2 h-4 w-4" />
-            <span>Medical Profile</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

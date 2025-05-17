@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from "next/server"
 // Update the base URL
 const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
 
-// Update the POST function to combine task and history into a single task parameter
 export async function POST(request: NextRequest) {
   try {
     const { agent_config, task, history } = await request.json()
@@ -25,13 +24,14 @@ export async function POST(request: NextRequest) {
       history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    // Format the payload - combine history into the task if it exists
     const payload = {
       agent_config,
-      task:
-        history && history.length > 0
-          ? `Previous conversation:\n${history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${task}`
-          : task,
+      task,
+    }
+
+    // If history exists, add it to the payload
+    if (history && history.length > 0) {
+      payload.history = history
     }
 
     const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
@@ -59,16 +59,6 @@ export async function POST(request: NextRequest) {
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
-    } else if (data && data.success === true && (!data.outputs || data.outputs.length === 0)) {
-      // Handle case where API returns success but empty outputs
-      console.log("API returned success but empty outputs, generating fallback response")
-      data.processedOutput =
-        "I'm processing your request, but I need a moment. Please try again or rephrase your question."
-
-      // Add an empty outputs array if it doesn't exist
-      if (!data.outputs) {
-        data.outputs = []
-      }
     }
 
     return NextResponse.json(data)

@@ -1,5 +1,50 @@
 import { getSupabaseClient } from "@/lib/supabase/client"
+import type { MedicalProfile } from "@/types/patient"
 import type { ChatMessage } from "@/types/agent"
+
+// Add this function to format the medical profile for the agent
+export const formatMedicalProfileForAgent = (profile: MedicalProfile): string => {
+  return `
+PATIENT PROFILE:
+Name: ${profile.first_name} ${profile.last_name}
+Date of Birth: ${profile.date_of_birth}
+Gender: ${profile.gender}
+Height: ${profile.height_cm ? `${profile.height_cm} cm` : "Not provided"}
+Weight: ${profile.weight_kg ? `${profile.weight_kg} kg` : "Not provided"}
+Blood Type: ${profile.blood_type || "Not provided"}
+
+Allergies: ${profile.allergies.length > 0 ? profile.allergies.join(", ") : "None reported"}
+Current Medications: ${profile.current_medications.length > 0 ? profile.current_medications.join(", ") : "None reported"}
+Chronic Conditions: ${profile.chronic_conditions.length > 0 ? profile.chronic_conditions.join(", ") : "None reported"}
+
+Surgical History: ${
+    JSON.stringify(profile.surgical_history) !== "{}"
+      ? typeof profile.surgical_history === "object" && profile.surgical_history.description
+        ? profile.surgical_history.description
+        : JSON.stringify(profile.surgical_history)
+      : "None reported"
+  }
+
+Family Medical History: ${
+    JSON.stringify(profile.family_medical_history) !== "{}"
+      ? typeof profile.family_medical_history === "object" && profile.family_medical_history.description
+        ? profile.family_medical_history.description
+        : JSON.stringify(profile.family_medical_history)
+      : "None reported"
+  }
+
+Lifestyle:
+- Smoking: ${profile.lifestyle_info.smoking}
+- Alcohol: ${profile.lifestyle_info.alcohol}
+- Exercise: ${profile.lifestyle_info.exercise}
+- Diet: ${profile.lifestyle_info.diet}
+
+Emergency Contact:
+- Name: ${profile.emergency_contact.name || "Not provided"}
+- Relationship: ${profile.emergency_contact.relationship || "Not provided"}
+- Phone: ${profile.emergency_contact.phone || "Not provided"}
+`
+}
 
 // Client-side chat service
 export const chatService = {

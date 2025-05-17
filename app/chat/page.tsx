@@ -2,7 +2,6 @@ import { agents } from "@/data/agents"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
-import { MedicalProfilePrompt } from "@/components/medical-profile-prompt"
 
 export default function ChatIndexPage() {
   return (
@@ -11,8 +10,6 @@ export default function ChatIndexPage() {
         <h1 className="text-3xl font-bold tracking-tight">Chat with Specialists</h1>
         <p className="text-mcs-gray-light">Select a healthcare specialist to start a conversation.</p>
       </div>
-
-      <MedicalProfilePrompt />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {agents.map((agent) => (

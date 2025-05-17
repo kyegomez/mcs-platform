@@ -30,13 +30,14 @@ export async function POST(request: NextRequest) {
       history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    // Format the payload - combine history into the task if it exists
     const payload = {
       agent_config,
-      task:
-        history && history.length > 0
-          ? `Previous conversation:\n${history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${task}`
-          : task,
+      task,
+    }
+
+    // If history exists, add it to the payload
+    if (history && history.length > 0) {
+      payload.history = history
     }
 
     const swarmsResponse = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
@@ -60,27 +61,8 @@ export async function POST(request: NextRequest) {
     const data = await swarmsResponse.json()
     console.log("Swarms API response structure:", Object.keys(data))
 
-    // Check if the response has the expected structure but handle empty outputs gracefully
-    let content = ""
-
-    if (data && data.success === true) {
-      if (data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
-        // Get the last output from the array, which should contain the actual response
-        const lastOutput = data.outputs[data.outputs.length - 1]
-
-        if (lastOutput && typeof lastOutput.content === "string") {
-          content = lastOutput.content
-        } else {
-          console.warn("Invalid output content in successful response:", lastOutput)
-          content = "I received your message but couldn't generate a proper response. Please try again."
-        }
-      } else {
-        // API returned success but empty outputs - this is a valid case we need to handle
-        console.log("API returned success but empty outputs, generating fallback response")
-        content = "I'm processing your request, but I need a moment. Please try again or rephrase your question."
-      }
-    } else {
-      // Something is wrong with the response
+    // Check if the response has the expected structure
+    if (!data || !data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {
       console.error("Unexpected response structure:", data)
       return new Response(
         JSON.stringify({
@@ -93,6 +75,25 @@ export async function POST(request: NextRequest) {
         },
       )
     }
+
+    // Get the last output from the array, which should contain the actual response
+    const lastOutput = data.outputs[data.outputs.length - 1]
+
+    if (!lastOutput || typeof lastOutput.content !== "string") {
+      console.error("Invalid output content:", lastOutput)
+      return new Response(
+        JSON.stringify({
+          error: "Invalid output content from Swarms API",
+          output: lastOutput,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      )
+    }
+
+    const content = lastOutput.content
 
     // Create a stream from the response
     const stream = new ReadableStream({

@@ -16,6 +16,8 @@ import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { chatService } from "@/lib/services/chat-service"
 import { MarkdownMessage } from "@/components/markdown-message"
+import { medicalProfileService } from "@/lib/services/medical-profile-service"
+import type { MedicalProfile } from "@/types/patient"
 
 export default function ChatPage() {
   const params = useParams()
@@ -31,6 +33,8 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null)
   const [chatId, setChatId] = useState<string | null>(null)
   const [isLoadingChat, setIsLoadingChat] = useState(true)
+  const [medicalProfile, setMedicalProfile] = useState<MedicalProfile | null>(null)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -88,6 +92,24 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages, currentStreamingMessage])
 
+  useEffect(() => {
+    if (user) {
+      const loadMedicalProfile = async () => {
+        setIsLoadingProfile(true)
+        try {
+          const profile = await medicalProfileService.getMedicalProfile(user.id)
+          setMedicalProfile(profile)
+        } catch (error) {
+          console.error("Error loading medical profile:", error)
+        } finally {
+          setIsLoadingProfile(false)
+        }
+      }
+
+      loadMedicalProfile()
+    }
+  }, [user])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -137,7 +159,6 @@ export default function ChatPage() {
           fullResponse += chunk
           setCurrentStreamingMessage(fullResponse)
         },
-        user.id, // Pass the user ID to include medical profile data
       )
 
       // Create the assistant message with the full response
