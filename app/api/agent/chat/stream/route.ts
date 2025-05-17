@@ -3,6 +3,59 @@ import type { NextRequest } from "next/server"
 // Update the base URL
 const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
 
+// Helper function to retry API calls
+async function retryFetch(url: string, options: RequestInit, maxRetries = 3, delay = 1000) {
+  let lastError
+  let lastResponse
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[SERVER-STREAM] Retry attempt ${attempt}/${maxRetries} for ${url}`)
+      const response = await fetch(url, options)
+      lastResponse = response
+
+      // Check if response is ok
+      if (response.ok) {
+        // Clone the response before reading it
+        const responseClone = response.clone()
+        const data = await responseClone.json()
+
+        // Check if the response has outputs
+        if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+          console.log(`[SERVER-STREAM] Attempt ${attempt}: Found valid outputs`)
+          return response
+        }
+
+        // If no outputs but success is true, and we have more retries, continue
+        if (data && data.success === true && attempt < maxRetries) {
+          console.log(`[SERVER-STREAM] Attempt ${attempt}: Success but no outputs, retrying...`)
+          await new Promise((resolve) => setTimeout(resolve, delay * attempt))
+          continue
+        }
+
+        // If this is our last attempt or success is false, return what we have
+        return response
+      }
+
+      // If not ok, get error text and throw
+      const errorText = await response.text()
+      throw new Error(`API error: ${response.status} - ${errorText}`)
+    } catch (error) {
+      console.error(`[SERVER-STREAM] Attempt ${attempt} failed:`, error)
+      lastError = error
+
+      // If this is not the last attempt, wait before retrying
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, delay * attempt))
+      }
+    }
+  }
+
+  // If we've exhausted all retries, return the last response or throw the last error
+  if (lastResponse) return lastResponse
+  throw lastError
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log("[SERVER-STREAM] Received request to /api/agent/chat/stream")
@@ -51,14 +104,20 @@ export async function POST(request: NextRequest) {
 
     console.log("[SERVER-STREAM] Full payload to Swarms API:", JSON.stringify(payload))
 
-    const swarmsResponse = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
+    // Use the retry mechanism for the fetch call
+    const swarmsResponse = await retryFetch(
+      `${SWARMS_API_URL}/v1/agent/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    })
+      3,
+      2000,
+    )
 
     console.log("[SERVER-STREAM] Swarms API response status:", swarmsResponse.status)
     console.log("[SERVER-STREAM] Swarms API response headers:", {
@@ -151,7 +210,7 @@ export async function POST(request: NextRequest) {
     } else if (data && data.success === true) {
       // API call was successful but no outputs were returned
       console.log("[SERVER-STREAM] API returned success but no outputs:", data)
-      const content = "The agent is processing your request. Please try again in a moment."
+      const content = "Could not get a response from the agent. Please try again."
 
       // Create a stream from the response
       const stream = new ReadableStream({
