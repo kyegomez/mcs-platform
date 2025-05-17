@@ -126,6 +126,12 @@ Please use this medical profile information to provide personalized advice and r
       return lastOutput?.content || "No content found in response"
     }
 
+    // Handle case where API returns success but empty outputs
+    if (data.success === true) {
+      console.log("API returned success but empty outputs, generating fallback response")
+      return "I'm processing your request, but I need a moment. Please try again or rephrase your question."
+    }
+
     return "Received response but couldn't extract content"
   } catch (error) {
     console.error("Error chatting with agent:", error)
@@ -257,6 +263,17 @@ Please use this medical profile information to provide personalized advice and r
     const contentType = response.headers.get("Content-Type") || ""
     if (contentType.includes("application/json")) {
       const errorData = await response.json()
+
+      // If the API returned success but empty outputs, provide a fallback response
+      if (
+        errorData.data &&
+        errorData.data.success === true &&
+        (!errorData.data.outputs || errorData.data.outputs.length === 0)
+      ) {
+        onChunk("I'm processing your request, but I need a moment. Please try again or rephrase your question.")
+        return // Exit early with the fallback message
+      }
+
       throw new Error(`API returned JSON instead of stream: ${errorData.error || "Unknown error"}`)
     }
 

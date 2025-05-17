@@ -59,6 +59,16 @@ export async function POST(request: NextRequest) {
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
+    } else if (data && data.success === true && (!data.outputs || data.outputs.length === 0)) {
+      // Handle case where API returns success but empty outputs
+      console.log("API returned success but empty outputs, generating fallback response")
+      data.processedOutput =
+        "I'm processing your request, but I need a moment. Please try again or rephrase your question."
+
+      // Add an empty outputs array if it doesn't exist
+      if (!data.outputs) {
+        data.outputs = []
+      }
     }
 
     return NextResponse.json(data)
