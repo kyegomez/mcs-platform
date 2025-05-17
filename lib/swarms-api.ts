@@ -64,18 +64,6 @@ Please use this medical profile information to provide personalized advice and r
 `
     }
 
-    // Format the chat history as a string to include in the task
-    let formattedHistoryText = ""
-    if (historyFormatted.length > 0) {
-      formattedHistoryText = "\n\nChat History:\n"
-      historyFormatted.forEach((msg) => {
-        formattedHistoryText += `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}\n`
-      })
-    }
-
-    // Combine the user's message with the chat history
-    const taskWithHistory = `${formattedHistoryText}\n\nUser: ${message}`
-
     console.log("Sending chat with history:", {
       agent_name: agent.name,
       message_length: message.length,
@@ -83,6 +71,12 @@ Please use this medical profile information to provide personalized advice and r
       history_sample: historyFormatted.slice(-2), // Log last 2 messages for debugging
       has_medical_profile: !!medicalProfile,
     })
+
+    // Format the task to include history if available
+    const task =
+      historyFormatted.length > 0
+        ? `Previous conversation:\n${historyFormatted.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${message}`
+        : message
 
     const payload = {
       agent_config: {
@@ -96,7 +90,8 @@ Please use this medical profile information to provide personalized advice and r
         temperature: 0.7,
         auto_generate_prompt: false,
       },
-      task: taskWithHistory, // Include both the message and history in the task
+      task: task,
+      // Remove the history parameter as it's now included in the task
     }
 
     console.log("Sending request to chat API:", {
@@ -203,18 +198,6 @@ Please use this medical profile information to provide personalized advice and r
 `
     }
 
-    // Format the chat history as a string to include in the task
-    let formattedHistoryText = ""
-    if (historyFormatted.length > 0) {
-      formattedHistoryText = "\n\nChat History:\n"
-      historyFormatted.forEach((msg) => {
-        formattedHistoryText += `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}\n`
-      })
-    }
-
-    // Combine the user's message with the chat history
-    const taskWithHistory = `${formattedHistoryText}\n\nUser: ${message}`
-
     console.log("Streaming chat with history:", {
       agent_name: agent.name,
       message_length: message.length,
@@ -222,6 +205,12 @@ Please use this medical profile information to provide personalized advice and r
       history_sample: historyFormatted.slice(-2), // Log last 2 messages for debugging
       has_medical_profile: !!medicalProfile,
     })
+
+    // Format the task to include history if available
+    const task =
+      historyFormatted.length > 0
+        ? `Previous conversation:\n${historyFormatted.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${message}`
+        : message
 
     const payload = {
       agent_config: {
@@ -235,7 +224,8 @@ Please use this medical profile information to provide personalized advice and r
         temperature: 0.7,
         auto_generate_prompt: false,
       },
-      task: taskWithHistory, // Include both the message and history in the task
+      task: task,
+      // Remove the history parameter as it's now included in the task
     }
 
     console.log("Sending request to stream API:", {

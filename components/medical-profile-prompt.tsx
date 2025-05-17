@@ -1,55 +1,70 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { medicalProfileService } from "@/lib/services/medical-profile-service"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { FileBarChart, X } from "lucide-react"
+import Link from "next/link"
 
 export function MedicalProfilePrompt() {
-  const { user, isLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null)
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true)
+  const [showPrompt, setShowPrompt] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!isLoading && user) {
-      const checkProfile = async () => {
-        setIsCheckingProfile(true)
-        try {
-          const hasProfile = await medicalProfileService.hasMedicalProfile(user.id)
-          setHasProfile(hasProfile)
-        } catch (error) {
-          console.error("Error checking medical profile:", error)
-        } finally {
-          setIsCheckingProfile(false)
-        }
-      }
-      checkProfile()
-    }
-  }, [user, isLoading])
+    const checkMedicalProfile = async () => {
+      if (!user) return
 
-  if (isLoading || isCheckingProfile || hasProfile === null || hasProfile === true) {
+      try {
+        setIsLoading(true)
+        const profile = await medicalProfileService.getUserMedicalProfile(user.id)
+
+        // Show prompt if no profile exists
+        setShowPrompt(!profile)
+      } catch (error) {
+        console.error("Error checking medical profile:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (user) {
+      checkMedicalProfile()
+    }
+  }, [user])
+
+  if (isLoading || !user || !showPrompt) {
     return null
   }
 
   return (
-    <Card className="mb-6 border-mcs-blue bg-mcs-blue/10">
-      <CardContent className="flex items-start gap-4 p-4">
-        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-mcs-blue" />
-        <div>
-          <h3 className="font-medium">Complete Your Medical Profile</h3>
-          <p className="mt-1 text-sm">
-            To receive personalized healthcare advice, please complete your medical profile. This information helps our
-            healthcare agents provide recommendations tailored to your specific needs.
-          </p>
+    <Card className="bg-mcs-blue/10 border-mcs-blue/30 mb-6">
+      <CardContent className="pt-6 pb-2 flex items-start justify-between">
+        <div className="flex gap-3">
+          <FileBarChart className="h-5 w-5 text-mcs-blue flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Complete your medical profile</p>
+            <p className="text-sm text-mcs-gray-light mt-1">
+              Provide your medical information to receive personalized care from our healthcare specialists.
+            </p>
+          </div>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowPrompt(false)}
+          className="text-mcs-gray-light hover:text-white -mt-2 -mr-2"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </CardContent>
-      <CardFooter className="px-4 pb-4 pt-0">
-        <Button onClick={() => router.push("/onboarding")} className="bg-mcs-blue hover:bg-mcs-blue-light">
-          Complete Medical Profile
+      <CardFooter className="pb-4">
+        <Button asChild className="bg-mcs-blue hover:bg-mcs-blue-light text-white">
+          <Link href="/onboarding">Complete Profile</Link>
         </Button>
       </CardFooter>
     </Card>

@@ -1,60 +1,76 @@
-import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-export async function POST(request: Request) {
+// Update the base URL
+const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
+
+export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json()
+    const { agent_config, task, history } = await request.json()
 
     // Get the API key from environment variables
     const apiKey = process.env.SWARMS_API_KEY
 
+    // Log the API key status (without revealing the key)
+    console.log("API Key status:", apiKey ? "Configured" : "Not configured")
+
     if (!apiKey) {
-      console.error("SWARMS_API_KEY is not configured")
-      return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
+      console.error("SWARMS_API_KEY environment variable is not configured")
+      return new Response(JSON.stringify({ error: "SWARMS_API_KEY is not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    // Make sure we have the required fields
-    if (!payload.agent_config || !payload.task) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    // The Swarms API doesn't have a history parameter, so we need to ensure
-    // the history is included in the task parameter
-
-    console.log("Making streaming request to Swarms API with:", {
-      agent_name: payload.agent_config.agent_name,
-      task_length: payload.task?.length,
+    // Log the history being sent to the API
+    console.log("Making request to Swarms API with:", {
+      url: `${SWARMS_API_URL}/v1/agent/completions`,
+      agent_name: agent_config?.agent_name,
+      task_length: task?.length,
+      history_length: history?.length,
+      history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    const response = await fetch("https://swarms-api-285321057562.us-east1.run.app/v1/agent/completions", {
+    // Format the payload - combine history into the task if it exists
+    const payload = {
+      agent_config,
+      task:
+        history && history.length > 0
+          ? `Previous conversation:\n${history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${task}`
+          : task,
+    }
+
+    const swarmsResponse = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
       },
-      body: JSON.stringify({
-        agent_config: payload.agent_config,
-        task: payload.task,
-      }),
+      body: JSON.stringify(payload),
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("Swarms API streaming error:", errorText)
-      return NextResponse.json({ error: `Swarms API error: ${errorText}` }, { status: response.status })
+    if (!swarmsResponse.ok) {
+      const errorText = await swarmsResponse.text()
+      console.error("Swarms API error:", errorText)
+      return new Response(JSON.stringify({ error: `Swarms API error: ${errorText}` }), {
+        status: swarmsResponse.status,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    // For the streaming endpoint, we need to manually create a stream from the response
-    const data = await response.json()
+    const data = await swarmsResponse.json()
+    console.log("Swarms API response structure:", Object.keys(data))
 
+    // Check if the response has the expected structure
     if (!data || !data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {
       console.error("Unexpected response structure:", data)
-      return NextResponse.json(
-        {
+      return new Response(
+        JSON.stringify({
           error: "Unexpected response structure from Swarms API",
           data: data,
-        },
+        }),
         {
           status: 500,
+          headers: { "Content-Type": "application/json" },
         },
       )
     }
@@ -64,13 +80,14 @@ export async function POST(request: Request) {
 
     if (!lastOutput || typeof lastOutput.content !== "string") {
       console.error("Invalid output content:", lastOutput)
-      return NextResponse.json(
-        {
+      return new Response(
+        JSON.stringify({
           error: "Invalid output content from Swarms API",
           output: lastOutput,
-        },
+        }),
         {
           status: 500,
+          headers: { "Content-Type": "application/json" },
         },
       )
     }
@@ -103,13 +120,16 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error("Error in agent chat stream API:", error)
-    return NextResponse.json(
-      {
+    console.error("Error in agent chat streaming API:", error)
+    return new Response(
+      JSON.stringify({
         error: "Internal server error",
         message: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
       },
-      { status: 500 },
     )
   }
 }

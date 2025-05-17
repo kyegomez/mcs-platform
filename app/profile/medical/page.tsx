@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { medicalProfileService } from "@/lib/services/medical-profile-service"
-import type { MedicalProfile } from "@/types/medical-profile"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle, Edit } from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Edit, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Link from "next/link"
+import type { MedicalProfile } from "@/types/medical-profile"
 
 export default function MedicalProfilePage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -18,33 +19,29 @@ export default function MedicalProfilePage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!authLoading && !user) {
-      router.push("/login")
-      return
+    const loadProfile = async () => {
+      if (!user) return
+
+      setIsLoading(true)
+      try {
+        const medicalProfile = await medicalProfileService.getUserMedicalProfile(user.id)
+        setProfile(medicalProfile)
+      } catch (error) {
+        console.error("Error loading medical profile:", error)
+        setError("Failed to load your medical profile. Please try again.")
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    // Load medical profile
-    if (user) {
-      const loadProfile = async () => {
-        setIsLoading(true)
-        try {
-          const profile = await medicalProfileService.getUserMedicalProfile(user.id)
-          setProfile(profile)
-        } catch (error) {
-          console.error("Error loading medical profile:", error)
-          setError("Failed to load your medical profile. Please try again.")
-        } finally {
-          setIsLoading(false)
-        }
+    if (!authLoading) {
+      if (!user) {
+        router.push("/login")
+      } else {
+        loadProfile()
       }
-      loadProfile()
     }
   }, [user, authLoading, router])
-
-  const handleEditProfile = () => {
-    router.push("/onboarding")
-  }
 
   if (authLoading || isLoading) {
     return (
@@ -57,188 +54,273 @@ export default function MedicalProfilePage() {
     )
   }
 
+  if (!user) {
+    return null // Will redirect to login
+  }
+
   if (!profile) {
     return (
-      <div className="container mx-auto py-8">
-        <Card className="mx-auto max-w-4xl">
+      <div className="container max-w-4xl py-8">
+        <h1 className="text-3xl font-bold mb-8">Medical Profile</h1>
+
+        <Card className="bg-black border-mcs-gray">
           <CardHeader>
-            <CardTitle>Medical Profile</CardTitle>
-            <CardDescription>Your medical profile information</CardDescription>
+            <CardTitle>No Medical Profile Found</CardTitle>
+            <CardDescription>You haven't completed your medical profile yet.</CardDescription>
           </CardHeader>
           <CardContent>
-            {error ? (
-              <Alert className="border-red-500 bg-red-500/10">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ) : (
-              <div className="text-center py-8">
-                <p className="mb-4">You haven't created a medical profile yet.</p>
-                <Button onClick={() => router.push("/onboarding")}>Create Medical Profile</Button>
-              </div>
-            )}
+            <p className="text-mcs-gray-light mb-4">
+              Complete your medical profile to help our healthcare agents provide you with better care.
+            </p>
           </CardContent>
+          <CardFooter>
+            <Button asChild className="bg-mcs-blue hover:bg-mcs-blue-light text-white">
+              <Link href="/onboarding">Complete Medical Profile</Link>
+            </Button>
+          </CardFooter>
         </Card>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="mx-auto max-w-4xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Medical Profile</CardTitle>
-            <CardDescription>Your medical profile information</CardDescription>
-          </div>
-          <Button onClick={handleEditProfile} className="flex items-center gap-1">
-            <Edit className="h-4 w-4" /> Edit Profile
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Personal Information */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Personal Information</h3>
-            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+    <div className="container max-w-4xl py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Medical Profile</h1>
+        <Button asChild className="bg-mcs-blue hover:bg-mcs-blue-light text-white">
+          <Link href="/profile/medical/edit">
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Link>
+        </Button>
+      </div>
+
+      {error && (
+        <Alert className="mb-6 border-red-500 bg-red-500/10">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="space-y-6">
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <span className="font-medium">Name:</span> {profile.first_name} {profile.last_name}
+                <p className="text-sm text-mcs-gray-light">Full Name</p>
+                <p className="font-medium">
+                  {profile.first_name} {profile.last_name}
+                </p>
               </div>
               <div>
-                <span className="font-medium">Date of Birth:</span>{" "}
-                {new Date(profile.date_of_birth).toLocaleDateString()}
+                <p className="text-sm text-mcs-gray-light">Date of Birth</p>
+                <p className="font-medium">{new Date(profile.date_of_birth).toLocaleDateString()}</p>
               </div>
               <div>
-                <span className="font-medium">Gender:</span> {profile.gender}
+                <p className="text-sm text-mcs-gray-light">Gender</p>
+                <p className="font-medium">{profile.gender}</p>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Physical Characteristics */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Physical Characteristics</h3>
-            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Physical Characteristics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <span className="font-medium">Height:</span>{" "}
-                {profile.height_cm ? `${profile.height_cm} cm` : "Not provided"}
+                <p className="text-sm text-mcs-gray-light">Height</p>
+                <p className="font-medium">{profile.height_cm ? `${profile.height_cm} cm` : "Not provided"}</p>
               </div>
               <div>
-                <span className="font-medium">Weight:</span>{" "}
-                {profile.weight_kg ? `${profile.weight_kg} kg` : "Not provided"}
+                <p className="text-sm text-mcs-gray-light">Weight</p>
+                <p className="font-medium">{profile.weight_kg ? `${profile.weight_kg} kg` : "Not provided"}</p>
               </div>
               <div>
-                <span className="font-medium">Blood Type:</span> {profile.blood_type || "Not provided"}
+                <p className="text-sm text-mcs-gray-light">Blood Type</p>
+                <p className="font-medium">{profile.blood_type || "Not provided"}</p>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Medical History */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Medical History</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium">Chronic Conditions:</span>{" "}
-                {profile.chronic_conditions.length > 0 ? profile.chronic_conditions.join(", ") : "None reported"}
-              </div>
-              <div>
-                <span className="font-medium">Previous Surgeries:</span>{" "}
-                {profile.surgical_history.has_previous_surgeries ? "Yes" : "No"}
-              </div>
-              {profile.surgical_history.has_previous_surgeries && profile.surgical_history.surgeries && (
-                <div className="pl-4">
-                  {profile.surgical_history.surgeries.map((surgery: any, index: number) => (
-                    <div key={index} className="mb-1">
-                      {surgery.procedure} ({surgery.year}){surgery.notes && ` - ${surgery.notes}`}
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Medical Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-mcs-gray-light mb-2">Chronic Conditions</p>
+              {profile.chronic_conditions.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profile.chronic_conditions.map((condition, index) => (
+                    <div key={index} className="bg-mcs-gray/30 px-3 py-1 rounded-full text-sm">
+                      {condition}
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p>None provided</p>
               )}
             </div>
-          </div>
 
-          {/* Medications & Allergies */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Medications & Allergies</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium">Current Medications:</span>{" "}
-                {profile.current_medications.length > 0 ? profile.current_medications.join(", ") : "None reported"}
-              </div>
-              <div>
-                <span className="font-medium">Allergies:</span>{" "}
-                {profile.allergies.length > 0 ? profile.allergies.join(", ") : "None reported"}
-              </div>
+            <div>
+              <p className="text-sm text-mcs-gray-light mb-2">Allergies</p>
+              {profile.allergies.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profile.allergies.map((allergy, index) => (
+                    <div key={index} className="bg-mcs-gray/30 px-3 py-1 rounded-full text-sm">
+                      {allergy}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>None provided</p>
+              )}
             </div>
-          </div>
 
-          {/* Family Medical History */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Family Medical History</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                {Object.entries(profile.family_medical_history)
-                  .filter(([key, value]) => value === true && key !== "other")
-                  .map(([key]) => key.replace(/_/g, " "))
-                  .join(", ") || "None reported"}
-              </div>
-              {profile.family_medical_history.other && (
-                <div>
-                  <span className="font-medium">Other:</span> {profile.family_medical_history.other}
+            <div>
+              <p className="text-sm text-mcs-gray-light mb-2">Current Medications</p>
+              {profile.current_medications.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profile.current_medications.map((medication, index) => (
+                    <div key={index} className="bg-mcs-gray/30 px-3 py-1 rounded-full text-sm">
+                      {medication}
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <p>None provided</p>
               )}
             </div>
-          </div>
 
-          {/* Lifestyle Information */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Lifestyle Information</h3>
-            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            {profile.surgical_history.length > 0 && (
               <div>
-                <span className="font-medium">Smoking:</span> {profile.lifestyle_info.smoking_status}
-              </div>
-              <div>
-                <span className="font-medium">Alcohol:</span> {profile.lifestyle_info.alcohol_consumption}
-              </div>
-              <div>
-                <span className="font-medium">Exercise:</span> {profile.lifestyle_info.exercise_frequency}
-              </div>
-              <div>
-                <span className="font-medium">Stress Level:</span> {profile.lifestyle_info.stress_level}
-              </div>
-              {profile.lifestyle_info.diet && (
-                <div>
-                  <span className="font-medium">Diet:</span> {profile.lifestyle_info.diet}
+                <p className="text-sm text-mcs-gray-light mb-2">Surgical History</p>
+                <div className="space-y-2">
+                  {profile.surgical_history.map((surgery, index) => (
+                    <div key={index} className="bg-mcs-gray/30 p-3 rounded-md">
+                      <p className="font-medium">{surgery.procedure}</p>
+                      <p className="text-sm text-mcs-gray-light">Date: {new Date(surgery.date).toLocaleDateString()}</p>
+                      {surgery.notes && <p className="text-sm mt-1">{surgery.notes}</p>}
+                    </div>
+                  ))}
                 </div>
-              )}
-              {profile.lifestyle_info.occupation && (
-                <div>
-                  <span className="font-medium">Occupation:</span> {profile.lifestyle_info.occupation}
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Emergency Contact */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-2 font-medium">Emergency Contact</h3>
-            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <div>
-                <span className="font-medium">Name:</span> {profile.emergency_contact.name}
-              </div>
-              <div>
-                <span className="font-medium">Relationship:</span> {profile.emergency_contact.relationship}
-              </div>
-              <div>
-                <span className="font-medium">Phone:</span> {profile.emergency_contact.phone}
-              </div>
-              {profile.emergency_contact.email && (
-                <div>
-                  <span className="font-medium">Email:</span> {profile.emergency_contact.email}
-                </div>
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Family Medical History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profile.family_medical_history.heart_disease && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Heart Disease</div>
+              )}
+              {profile.family_medical_history.diabetes && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Diabetes</div>
+              )}
+              {profile.family_medical_history.cancer && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Cancer</div>
+              )}
+              {profile.family_medical_history.stroke && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Stroke</div>
+              )}
+              {profile.family_medical_history.hypertension && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Hypertension</div>
+              )}
+              {profile.family_medical_history.mental_health_disorders && (
+                <div className="bg-mcs-gray/30 px-3 py-2 rounded-md text-sm">Mental Health Disorders</div>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            {profile.family_medical_history.other && (
+              <div className="mt-4">
+                <p className="text-sm text-mcs-gray-light mb-2">Other Family History</p>
+                <p>{profile.family_medical_history.other}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Lifestyle Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-mcs-gray-light">Smoking Status</p>
+                <p className="font-medium capitalize">{profile.lifestyle_info.smoking_status}</p>
+              </div>
+              <div>
+                <p className="text-sm text-mcs-gray-light">Alcohol Consumption</p>
+                <p className="font-medium capitalize">{profile.lifestyle_info.alcohol_consumption}</p>
+              </div>
+              <div>
+                <p className="text-sm text-mcs-gray-light">Exercise Frequency</p>
+                <p className="font-medium capitalize">{profile.lifestyle_info.exercise_frequency}</p>
+              </div>
+              <div>
+                <p className="text-sm text-mcs-gray-light">Stress Level</p>
+                <p className="font-medium capitalize">{profile.lifestyle_info.stress_level}</p>
+              </div>
+            </div>
+
+            {profile.lifestyle_info.occupation && (
+              <div className="mt-4">
+                <p className="text-sm text-mcs-gray-light">Occupation</p>
+                <p>{profile.lifestyle_info.occupation}</p>
+              </div>
+            )}
+
+            {profile.lifestyle_info.diet && (
+              <div className="mt-4">
+                <p className="text-sm text-mcs-gray-light">Diet</p>
+                <p>{profile.lifestyle_info.diet}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black border-mcs-gray">
+          <CardHeader>
+            <CardTitle>Emergency Contact</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile.emergency_contact.name ? (
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-mcs-gray-light">Name</p>
+                  <p className="font-medium">{profile.emergency_contact.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-mcs-gray-light">Relationship</p>
+                  <p>{profile.emergency_contact.relationship}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-mcs-gray-light">Phone</p>
+                  <p>{profile.emergency_contact.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-mcs-gray-light">Email</p>
+                  <p>{profile.emergency_contact.email}</p>
+                </div>
+              </div>
+            ) : (
+              <p>No emergency contact provided</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

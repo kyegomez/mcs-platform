@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: Request) {
+// Update the base URL
+const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
+
+// Update the POST function to combine task and history into a single task parameter
+export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json()
+    const { agent_config, task, history } = await request.json()
 
     // Get the API key from environment variables
     const apiKey = process.env.SWARMS_API_KEY
@@ -12,29 +16,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
     }
 
-    // Make sure we have the required fields
-    if (!payload.agent_config || !payload.task) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    // The Swarms API doesn't have a history parameter, so we need to ensure
-    // the history is included in the task parameter
-
+    // Log the history being sent to the API
     console.log("Making request to Swarms API with:", {
-      agent_name: payload.agent_config.agent_name,
-      task_length: payload.task?.length,
+      url: `${SWARMS_API_URL}/v1/agent/completions`,
+      agent_name: agent_config?.agent_name,
+      task_length: task?.length,
+      history_length: history?.length,
+      history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    const response = await fetch("https://swarms-api-285321057562.us-east1.run.app/v1/agent/completions", {
+    // Format the payload - combine history into the task if it exists
+    const payload = {
+      agent_config,
+      task:
+        history && history.length > 0
+          ? `Previous conversation:\n${history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}\n\nUser's current message: ${task}`
+          : task,
+    }
+
+    const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
       },
-      body: JSON.stringify({
-        agent_config: payload.agent_config,
-        task: payload.task,
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {
