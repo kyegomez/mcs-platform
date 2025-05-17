@@ -3,7 +3,6 @@ export interface Agent {
   name: string
   specialty: string
   description: string
-  avatar: string
   systemPrompt: string
 }
 

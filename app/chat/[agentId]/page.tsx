@@ -257,7 +257,13 @@ export default function ChatPage() {
 
           <div className="flex items-center gap-3">
             <div className="relative h-10 w-10 rounded-full overflow-hidden">
-              <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
+              {agent.avatar ? (
+                <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full bg-mcs-gray flex items-center justify-center">
+                  <span className="text-lg font-bold text-mcs-blue">{agent.name.charAt(0)}</span>
+                </div>
+              )}
             </div>
             <div>
               <h1 className="font-bold text-xl">{agent.name}</h1>

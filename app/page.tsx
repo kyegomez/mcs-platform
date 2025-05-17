@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { agents } from "@/data/agents"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
 import { DashboardMetrics } from "@/components/dashboard-metrics"
 import { AgentSearch } from "@/components/agent-search"
 import { Pagination } from "@/components/pagination"
@@ -89,12 +88,8 @@ export default function GalleryPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentAgents.map((agent) => (
                 <Link key={agent.id} href={`/chat/${agent.id}`}>
-                  <Card className="h-full overflow-hidden transition-all duration-200 hover:border-mcs-blue hover:shadow-[0_0_15px_rgba(0,112,243,0.15)] bg-black border-mcs-gray">
-                    <div className="relative h-48 w-full overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-10" />
-                      <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
-                    </div>
-                    <CardHeader className="pb-2">
+                  <Card className="h-full transition-all duration-200 hover:border-mcs-blue hover:shadow-[0_0_15px_rgba(0,112,243,0.15)] bg-black border-mcs-gray">
+                    <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <span className="h-3 w-3 rounded-full bg-mcs-blue animate-pulse" />
                         {agent.name}

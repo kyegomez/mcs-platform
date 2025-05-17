@@ -59,6 +59,13 @@ export async function POST(request: NextRequest) {
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
+    } else if (data && data.success === true) {
+      // API call was successful but no outputs were returned
+      console.log("API returned success but no outputs:", data)
+      data.processedOutput = "The agent is processing your request. Please try again in a moment."
+    } else {
+      console.error("Unexpected API response structure:", data)
+      data.processedOutput = "Received an unexpected response format from the API."
     }
 
     return NextResponse.json(data)

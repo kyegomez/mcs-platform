@@ -61,8 +61,71 @@ export async function POST(request: NextRequest) {
     const data = await swarmsResponse.json()
     console.log("Swarms API response structure:", Object.keys(data))
 
-    // Check if the response has the expected structure
-    if (!data || !data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {
+    // Check if the response has outputs
+    if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      // Get the last output from the array, which should contain the actual response
+      const lastOutput = data.outputs[data.outputs.length - 1]
+
+      if (!lastOutput || typeof lastOutput.content !== "string") {
+        console.error("Invalid output content:", lastOutput)
+        return new Response(
+          JSON.stringify({
+            error: "Invalid output content from Swarms API",
+            output: lastOutput,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        )
+      }
+
+      const content = lastOutput.content
+
+      // Create a stream from the response
+      const stream = new ReadableStream({
+        start(controller) {
+          // Simulate streaming by sending chunks of the response
+          const chunkSize = 5 // Characters per chunk
+
+          let index = 0
+          const interval = setInterval(() => {
+            if (index < content.length) {
+              const chunk = content.slice(index, index + chunkSize)
+              controller.enqueue(new TextEncoder().encode(chunk))
+              index += chunkSize
+            } else {
+              clearInterval(interval)
+              controller.close()
+            }
+          }, 15) // Adjust timing for realistic streaming
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      })
+    } else if (data && data.success === true) {
+      // API call was successful but no outputs were returned
+      console.log("API returned success but no outputs:", data)
+      const content = "The agent is processing your request. Please try again in a moment."
+
+      // Create a stream from the response
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(content))
+          controller.close()
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      })
+    } else {
       console.error("Unexpected response structure:", data)
       return new Response(
         JSON.stringify({
@@ -75,51 +138,6 @@ export async function POST(request: NextRequest) {
         },
       )
     }
-
-    // Get the last output from the array, which should contain the actual response
-    const lastOutput = data.outputs[data.outputs.length - 1]
-
-    if (!lastOutput || typeof lastOutput.content !== "string") {
-      console.error("Invalid output content:", lastOutput)
-      return new Response(
-        JSON.stringify({
-          error: "Invalid output content from Swarms API",
-          output: lastOutput,
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        },
-      )
-    }
-
-    const content = lastOutput.content
-
-    // Create a stream from the response
-    const stream = new ReadableStream({
-      start(controller) {
-        // Simulate streaming by sending chunks of the response
-        const chunkSize = 5 // Characters per chunk
-
-        let index = 0
-        const interval = setInterval(() => {
-          if (index < content.length) {
-            const chunk = content.slice(index, index + chunkSize)
-            controller.enqueue(new TextEncoder().encode(chunk))
-            index += chunkSize
-          } else {
-            clearInterval(interval)
-            controller.close()
-          }
-        }, 15) // Adjust timing for realistic streaming
-      },
-    })
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    })
   } catch (error) {
     console.error("Error in agent chat streaming API:", error)
     return new Response(

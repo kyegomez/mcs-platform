@@ -58,18 +58,19 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
 
     const data = await response.json()
 
-    // If the API processed the output for us, use that
-    if (data.processedOutput) {
-      return data.processedOutput
-    }
-
-    // Otherwise, try to extract the content from the last output
-    if (data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+    // Check if the API response has the expected structure
+    if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
       return lastOutput?.content || "No content found in response"
+    } else if (data && data.success === true) {
+      // API call was successful but no outputs were returned
+      console.log("API returned success but no outputs:", data)
+      return "The agent is processing your request. Please try again in a moment."
+    } else {
+      console.error("Unexpected API response structure:", data)
+      return "Received an unexpected response format from the API."
     }
-
-    return "Received response but couldn't extract content"
   } catch (error) {
     console.error("Error chatting with agent:", error)
     throw error
@@ -153,14 +154,52 @@ export async function streamChatWithAgent(
     const decoder = new TextDecoder()
     let done = false
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read()
-      done = doneReading
+    const swarmsResponse = await response
+    const data = await swarmsResponse.json()
+    console.log("Swarms API response structure:", Object.keys(data))
 
-      if (value) {
-        const chunk = decoder.decode(value, { stream: true })
-        onChunk(chunk)
+    // Check if the response has outputs
+    if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      // Get the last output from the array, which should contain the actual response
+      const lastOutput = data.outputs[data.outputs.length - 1]
+
+      if (!lastOutput || typeof lastOutput.content !== "string") {
+        console.error("Invalid output content:", lastOutput)
+        throw new Error("Invalid output content from Swarms API")
       }
+
+      const content = lastOutput.content
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read()
+        done = doneReading
+
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true })
+          onChunk(chunk)
+        }
+      }
+    } else if (data && data.success === true) {
+      // API call was successful but no outputs were returned
+      console.log("API returned success but no outputs:", data)
+      const content = "The agent is processing your request. Please try again in a moment."
+
+      // Create a stream from the response
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(content))
+          controller.close()
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      })
+    } else {
+      console.error("Unexpected response structure:", data)
+      throw new Error("Unexpected response structure from Swarms API")
     }
   } catch (error) {
     console.error("Error streaming chat with agent:", error)
