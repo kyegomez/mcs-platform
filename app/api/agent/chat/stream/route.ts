@@ -58,7 +58,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const data = await swarmsResponse.json()
+    // Clone the response before reading it as JSON
+    const responseForJson = swarmsResponse.clone()
+
+    // Parse the JSON response
+    const data = await responseForJson.json()
     console.log("Swarms API response structure:", Object.keys(data))
 
     // Check if the response has outputs

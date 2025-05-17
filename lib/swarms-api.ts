@@ -122,6 +122,7 @@ export async function streamChatWithAgent(
       history_length: historyFormatted.length,
     })
 
+    // Use the stream endpoint directly
     const response = await fetch("/api/agent/chat/stream", {
       method: "POST",
       headers: {
@@ -148,58 +149,21 @@ export async function streamChatWithAgent(
       throw new Error(`API returned JSON instead of stream: ${errorData.error || "Unknown error"}`)
     }
 
+    // Process the stream directly
     const reader = response.body?.getReader()
     if (!reader) throw new Error("Response body is null")
 
     const decoder = new TextDecoder()
     let done = false
 
-    const swarmsResponse = await response
-    const data = await swarmsResponse.json()
-    console.log("Swarms API response structure:", Object.keys(data))
+    while (!done) {
+      const { value, done: doneReading } = await reader.read()
+      done = doneReading
 
-    // Check if the response has outputs
-    if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
-      // Get the last output from the array, which should contain the actual response
-      const lastOutput = data.outputs[data.outputs.length - 1]
-
-      if (!lastOutput || typeof lastOutput.content !== "string") {
-        console.error("Invalid output content:", lastOutput)
-        throw new Error("Invalid output content from Swarms API")
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true })
+        onChunk(chunk)
       }
-
-      const content = lastOutput.content
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read()
-        done = doneReading
-
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true })
-          onChunk(chunk)
-        }
-      }
-    } else if (data && data.success === true) {
-      // API call was successful but no outputs were returned
-      console.log("API returned success but no outputs:", data)
-      const content = "The agent is processing your request. Please try again in a moment."
-
-      // Create a stream from the response
-      const stream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(new TextEncoder().encode(content))
-          controller.close()
-        },
-      })
-
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-        },
-      })
-    } else {
-      console.error("Unexpected response structure:", data)
-      throw new Error("Unexpected response structure from Swarms API")
     }
   } catch (error) {
     console.error("Error streaming chat with agent:", error)
