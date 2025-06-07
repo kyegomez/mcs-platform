@@ -58,7 +58,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
         agent_name: agent.name,
         description: agent.description,
         system_prompt: agent.systemPrompt,
-        model_name: "claude-3-5-sonnet-20240620",
+        model_name: "gpt-4o-mini",
         role: "worker",
         max_loops: 1,
         max_tokens: 16000,
@@ -153,7 +153,7 @@ export async function streamChatWithAgent(
         agent_name: agent.name,
         description: agent.description,
         system_prompt: agent.systemPrompt,
-        model_name: "claude-3-5-sonnet-20240620",
+        model_name: "gpt-4o-mini",
         role: "worker",
         max_loops: 1,
         max_tokens: 16000,
@@ -170,9 +170,9 @@ export async function streamChatWithAgent(
       payload: JSON.stringify(payload),
     })
 
-    // Use the retry mechanism for the fetch call
+    // Use the non-streaming endpoint first to get the full response
     const response = await retryFetch(
-      "/api/agent/chat/stream",
+      "/api/agent/chat",
       {
         method: "POST",
         headers: {
@@ -184,54 +184,69 @@ export async function streamChatWithAgent(
       1000,
     )
 
-    console.log("[CLIENT] Received response from stream API with status:", response.status)
-    console.log("[CLIENT] Response headers:", {
-      contentType: response.headers.get("Content-Type"),
-      contentLength: response.headers.get("Content-Length"),
+    console.log("[CLIENT] Received response from chat API with status:", response.status)
+
+    const data = await response.json()
+    console.log("[CLIENT] Parsed response data:", {
+      keys: Object.keys(data),
+      success: data.success,
+      outputsLength: data.outputs?.length,
+      processedOutput: data.processedOutput?.substring(0, 100) + "...",
+      rawData: JSON.stringify(data).substring(0, 500) + "...",
     })
 
-    // Check if the response is JSON (error) instead of a stream
-    const contentType = response.headers.get("Content-Type") || ""
-    if (contentType.includes("application/json")) {
-      console.warn("[CLIENT] Received JSON instead of stream, parsing as error")
-      const errorData = await response.json()
-      console.error("[CLIENT] JSON error data:", errorData)
-      throw new Error(`API returned JSON instead of stream: ${errorData.error || "Unknown error"}`)
+    let content = ""
+
+    // If the API returned a processed output, use that directly
+    if (data.processedOutput) {
+      console.log("[CLIENT] Using processed output from server")
+      content = data.processedOutput
+    }
+    // Otherwise, try to extract the content from the outputs
+    else if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      // Get the last output from the array, which should contain the actual response
+      const lastOutput = data.outputs[data.outputs.length - 1]
+      console.log("[CLIENT] Found output content:", {
+        content: lastOutput?.content?.substring(0, 100) + "...",
+      })
+      content = lastOutput?.content || "No content found in response"
+    } else {
+      // If we get here, something went wrong
+      console.error("[CLIENT] Could not extract content from response:", data)
+      content = "Could not get a response from the agent. Please try again."
     }
 
-    console.log("[CLIENT] Starting to read stream")
-    // Process the stream directly
-    const reader = response.body?.getReader()
-    if (!reader) {
-      console.error("[CLIENT] Response body is null")
-      throw new Error("Response body is null")
-    }
+    // Now simulate streaming with the content we got
+    console.log("[CLIENT] Simulating streaming with content length:", content.length)
 
-    const decoder = new TextDecoder()
-    let done = false
-    let totalReceived = 0
-    let receivedContent = ""
+    // Simulate streaming by sending chunks of the response
+    const chunkSize = 5 // Characters per chunk
+    let index = 0
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read()
-      done = doneReading
-
-      if (value) {
-        const chunk = decoder.decode(value, { stream: true })
-        totalReceived += chunk.length
-        receivedContent += chunk
-        console.log(`[CLIENT] Received chunk (${chunk.length} chars): "${chunk.substring(0, 20)}..."`)
+    const streamInterval = setInterval(() => {
+      if (index < content.length) {
+        const chunk = content.slice(index, index + chunkSize)
         onChunk(chunk)
+        index += chunkSize
+
+        if (index % 100 === 0) {
+          console.log(`[CLIENT] Streamed ${index}/${content.length} characters`)
+        }
+      } else {
+        clearInterval(streamInterval)
+        console.log("[CLIENT] Streaming complete")
       }
-    }
+    }, 15) // Adjust timing for realistic streaming
 
-    console.log(`[CLIENT] Stream complete, received ${totalReceived} total characters`)
-
-    // If we didn't receive any content, send a fallback message
-    if (totalReceived === 0 || receivedContent.trim() === "") {
-      console.warn("[CLIENT] No content received from stream, sending fallback message")
-      onChunk("Could not get a response from the agent. Please try again.")
-    }
+    // Return a promise that resolves when streaming is complete
+    return new Promise<void>((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (index >= content.length) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+      }, 100)
+    })
   } catch (error) {
     console.error("[CLIENT] Error streaming chat with agent:", error)
     throw error

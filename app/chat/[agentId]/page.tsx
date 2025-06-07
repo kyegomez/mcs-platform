@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Send, AlertCircle, Trash2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { chatService } from "@/lib/services/chat-service"
 import { MarkdownMessage } from "@/components/markdown-message"
@@ -139,6 +138,11 @@ export default function ChatPage() {
         },
       )
 
+      console.log("[CLIENT-CHAT] Received full response:", {
+        length: fullResponse.length,
+        preview: fullResponse.substring(0, 100) + "...",
+      })
+
       // Create the assistant message with the full response
       const assistantMessage: ChatMessage = {
         id: uuidv4(), // Temporary ID
@@ -256,14 +260,8 @@ export default function ChatPage() {
           </Button>
 
           <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden">
-              {agent.avatar ? (
-                <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
-              ) : (
-                <div className="w-full h-full bg-mcs-gray flex items-center justify-center">
-                  <span className="text-lg font-bold text-mcs-blue">{agent.name.charAt(0)}</span>
-                </div>
-              )}
+            <div className="w-10 h-10 rounded-full bg-mcs-gray flex items-center justify-center">
+              <span className="text-lg font-bold text-mcs-blue">{agent.name.charAt(0)}</span>
             </div>
             <div>
               <h1 className="font-bold text-xl">{agent.name}</h1>
