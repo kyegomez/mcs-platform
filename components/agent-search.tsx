@@ -1,94 +1,208 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, X } from "lucide-react"
+import { Search, Filter, X } from "lucide-react"
 import { agents } from "@/data/agents"
+import type { Agent } from "@/types/agent"
+import { AgentIcon } from "./agent-icon"
+import Link from "next/link"
 
-// Extract unique specialties for category filtering
-const specialties = Array.from(new Set(agents.map((agent) => agent.specialty)))
+const specialties = [
+  "All",
+  "Cardiovascular Health",
+  "Oncology",
+  "Neurology",
+  "Endocrinology",
+  "Pulmonology",
+  "Gastroenterology",
+  "Orthopedics",
+  "Mental Health",
+  "Immunology",
+  "Nutritional Health",
+  "Dermatology",
+  "Geriatrics",
+  "Reproductive Health",
+  "Sports Medicine",
+  "Pain Management",
+  "Emergency Medicine",
+  "Pediatrics",
+  "Ophthalmology",
+  "Urology",
+  "Rheumatology",
+  "Hematology",
+  "Infectious Disease",
+  "Behavioral Health",
+  "Allergy & Immunology",
+  "Physical Therapy",
+]
 
 interface AgentSearchProps {
-  onSearch: (query: string) => void
-  onCategoryChange: (category: string | null) => void
-  selectedCategory: string | null
+  onAgentSelect?: (agent: Agent) => void
+  showAsCards?: boolean
 }
 
-export function AgentSearch({ onSearch, onCategoryChange, selectedCategory }: AgentSearchProps) {
-  const [searchQuery, setSearchQuery] = useState("")
+export function AgentSearch({ onAgentSelect, showAsCards = true }: AgentSearchProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedSpecialty, setSelectedSpecialty] = useState("All")
+  const [showFilters, setShowFilters] = useState(false)
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch(searchQuery)
+  const filteredAgents = useMemo(() => {
+    return agents.filter((agent) => {
+      const matchesSearch =
+        agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.description.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesSpecialty = selectedSpecialty === "All" || agent.specialty === selectedSpecialty
+
+      return matchesSearch && matchesSpecialty
+    })
+  }, [searchTerm, selectedSpecialty])
+
+  const clearFilters = () => {
+    setSearchTerm("")
+    setSelectedSpecialty("All")
   }
 
-  const handleCategoryClick = (category: string) => {
-    if (selectedCategory === category) {
-      onCategoryChange(null) // Deselect if already selected
-    } else {
-      onCategoryChange(category)
-    }
+  if (showAsCards) {
+    return (
+      <div className="space-y-6">
+        {/* Search and Filter Controls */}
+        <div className="glass p-4 rounded-xl border border-white/10">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search specialists..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+
+            {(searchTerm || selectedSpecialty !== "All") && (
+              <Button
+                variant="ghost"
+                onClick={clearFilters}
+                className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex flex-wrap gap-2">
+                {specialties.map((specialty) => (
+                  <Badge
+                    key={specialty}
+                    variant={selectedSpecialty === specialty ? "default" : "outline"}
+                    className={`cursor-pointer transition-all duration-200 ${
+                      selectedSpecialty === specialty
+                        ? "bg-mcs-blue text-white border-mcs-blue"
+                        : "border-white/20 text-gray-300 hover:border-mcs-blue/50 hover:text-white"
+                    }`}
+                    onClick={() => setSelectedSpecialty(specialty)}
+                  >
+                    {specialty}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Results */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAgents.map((agent) => (
+            <Link key={agent.id} href={`/chat/${agent.id}`}>
+              <div className="glass-card p-6 rounded-xl border border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group">
+                <div className="flex items-start gap-4">
+                  <div className="relative">
+                    <div
+                      className="h-12 w-12 rounded-xl flex items-center justify-center border-2 transition-all duration-300 group-hover:scale-110"
+                      style={{
+                        borderColor: agent.iconColor + "30",
+                        backgroundColor: agent.iconColor + "10",
+                      }}
+                    >
+                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full status-online border-2 border-black"></div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white group-hover:text-mcs-blue transition-colors">
+                      {agent.name}
+                    </h3>
+                    <p className="text-sm text-mcs-blue mb-2">{agent.specialty}</p>
+                    <p className="text-sm text-gray-400 line-clamp-2">{agent.description}</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {filteredAgents.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-2">No specialists found</div>
+            <div className="text-sm text-gray-500">Try adjusting your search or filters</div>
+          </div>
+        )}
+      </div>
+    )
   }
 
-  const clearSearch = () => {
-    setSearchQuery("")
-    onSearch("")
-  }
-
+  // List view for other components
   return (
-    <div className="space-y-4 mb-6">
-      <form onSubmit={handleSearch} className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mcs-gray-light" />
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
-          type="text"
           placeholder="Search specialists..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-10 bg-mcs-gray border-mcs-gray focus-visible:ring-mcs-blue"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
         />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-mcs-gray-light hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-        <Button type="submit" className="sr-only">
-          Search
-        </Button>
-      </form>
+      </div>
 
-      <div className="flex flex-wrap gap-2">
-        <span className="text-sm text-mcs-gray-light mr-1 flex items-center">Categories:</span>
-        {specialties.map((specialty) => (
-          <Badge
-            key={specialty}
-            variant="outline"
-            className={`cursor-pointer hover:bg-mcs-blue/20 ${
-              selectedCategory === specialty
-                ? "bg-mcs-blue/20 text-mcs-blue border-mcs-blue"
-                : "text-mcs-gray-light border-mcs-gray"
-            }`}
-            onClick={() => handleCategoryClick(specialty)}
+      <div className="space-y-2">
+        {filteredAgents.map((agent) => (
+          <div
+            key={agent.id}
+            onClick={() => onAgentSelect?.(agent)}
+            className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
           >
-            {specialty}
-          </Badge>
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center border"
+              style={{
+                borderColor: agent.iconColor + "30",
+                backgroundColor: agent.iconColor + "10",
+              }}
+            >
+              <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-white">{agent.name}</div>
+              <div className="text-sm text-gray-400">{agent.specialty}</div>
+            </div>
+          </div>
         ))}
-        {selectedCategory && (
-          <Badge
-            variant="outline"
-            className="cursor-pointer bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20"
-            onClick={() => onCategoryChange(null)}
-          >
-            Clear Filter <X className="ml-1 h-3 w-3" />
-          </Badge>
-        )}
       </div>
     </div>
   )

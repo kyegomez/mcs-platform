@@ -1,7 +1,7 @@
 import { agents } from "@/data/agents"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
+import { AgentIcon } from "@/components/agent-icon"
 
 export default function ChatIndexPage() {
   return (
@@ -14,13 +14,20 @@ export default function ChatIndexPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {agents.map((agent) => (
           <Link key={agent.id} href={`/chat/${agent.id}`}>
-            <Card className="h-full overflow-hidden transition-all duration-200 hover:border-mcs-blue hover:shadow-[0_0_15px_rgba(0,112,243,0.15)] bg-black border-mcs-gray">
+            <Card className="h-full overflow-hidden transition-all duration-200 hover:border-mcs-blue hover:shadow-[0_0_15px_rgba(0,112,243,0.15)] bg-black border-mcs-gray group">
               <CardHeader className="pb-2 flex flex-row items-center gap-4">
-                <div className="relative h-12 w-12 rounded-full overflow-hidden">
-                  <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
+                <div
+                  className="relative h-12 w-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    borderColor: agent.iconColor + "50",
+                    backgroundColor: agent.iconColor + "10",
+                  }}
+                >
+                  <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
+                  <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-black"></div>
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{agent.name}</CardTitle>
+                  <CardTitle className="text-lg group-hover:text-mcs-blue transition-colors">{agent.name}</CardTitle>
                   <p className="text-sm text-mcs-blue">{agent.specialty}</p>
                 </div>
               </CardHeader>

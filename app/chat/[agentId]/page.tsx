@@ -10,10 +10,11 @@ import { streamChatWithAgent } from "@/lib/swarms-api"
 import { v4 as uuidv4 } from "uuid"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Send, AlertCircle, Trash2, Bot, User, Loader2 } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Trash2, User, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import Image from "next/image"
 import { getChatHistory, saveChatHistory } from "@/lib/chat-storage"
+import { AgentIcon } from "@/components/agent-icon"
+import { VoiceProcessor } from "@/components/voice-processor"
 
 export default function ChatPage() {
   const params = useParams()
@@ -26,13 +27,15 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [isListening, setIsListening] = useState(false)
+  const [speakResponse, setSpeakResponse] = useState<((text: string) => void) | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Load chat history from localStorage
   useEffect(() => {
     if (!agent) {
-      router.push("/")
+      router.push("/chat")
       return
     }
 
@@ -42,15 +45,14 @@ export default function ChatPage() {
       setMessages(savedMessages)
     } else {
       // Add welcome message if no history exists
-      setMessages([
-        {
-          id: uuidv4(),
-          role: "assistant",
-          content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
-          timestamp: new Date(),
-          agentId: agent.id,
-        },
-      ])
+      const welcomeMessage: ChatMessage = {
+        id: uuidv4(),
+        role: "assistant",
+        content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
+        timestamp: new Date(),
+        agentId: agent.id,
+      }
+      setMessages([welcomeMessage])
     }
   }, [agent, router])
 
@@ -67,6 +69,14 @@ export default function ChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  const handleVoiceTranscript = (transcript: string) => {
+    setInput(transcript)
+  }
+
+  const handleSpeakResponse = (speakFunction: (text: string) => void) => {
+    setSpeakResponse(() => speakFunction)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,6 +121,11 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, assistantMessage])
       setCurrentStreamingMessage("")
+
+      // Speak the response if voice is enabled
+      if (speakResponse && fullResponse) {
+        speakResponse(fullResponse)
+      }
     } catch (error) {
       console.error("Error in chat:", error)
       setError(
@@ -171,7 +186,7 @@ export default function ChatPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/chat")}
               className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -179,8 +194,14 @@ export default function ChatPage() {
 
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-12 w-12 rounded-xl overflow-hidden border-2 border-mcs-blue/30">
-                  <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center border-2"
+                  style={{
+                    borderColor: agent.iconColor + "30",
+                    backgroundColor: agent.iconColor + "10",
+                  }}
+                >
+                  <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full status-online border-2 border-black"></div>
               </div>
@@ -219,15 +240,21 @@ export default function ChatPage() {
             <div className="flex-shrink-0">
               <div
                 className={`h-8 w-8 rounded-xl flex items-center justify-center ${
-                  message.role === "user"
-                    ? "bg-gradient-to-r from-mcs-blue to-mcs-blue-light"
-                    : "bg-gradient-to-r from-gray-600 to-gray-500"
+                  message.role === "user" ? "bg-gradient-to-r from-mcs-blue to-mcs-blue-light" : "border"
                 }`}
+                style={
+                  message.role === "assistant"
+                    ? {
+                        borderColor: agent.iconColor + "30",
+                        backgroundColor: agent.iconColor + "10",
+                      }
+                    : {}
+                }
               >
                 {message.role === "user" ? (
                   <User className="h-4 w-4 text-white" />
                 ) : (
-                  <Bot className="h-4 w-4 text-white" />
+                  <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
                 )}
               </div>
             </div>
@@ -255,8 +282,14 @@ export default function ChatPage() {
         {currentStreamingMessage && (
           <div className="flex gap-4 chat-bubble-animation">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-r from-gray-600 to-gray-500">
-                <Bot className="h-4 w-4 text-white" />
+              <div
+                className="h-8 w-8 rounded-xl flex items-center justify-center border"
+                style={{
+                  borderColor: agent.iconColor + "30",
+                  backgroundColor: agent.iconColor + "10",
+                }}
+              >
+                <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
               </div>
             </div>
 
@@ -294,7 +327,7 @@ export default function ChatPage() {
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Type your message or use voice input..."
             className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
             rows={1}
             onKeyDown={(e) => {
@@ -304,9 +337,23 @@ export default function ChatPage() {
               }
             }}
           />
-          <Button type="submit" disabled={isLoading || !input.trim()} className="btn-primary rounded-xl px-6 shrink-0">
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <VoiceProcessor
+              onTranscript={handleVoiceTranscript}
+              onSpeakResponse={handleSpeakResponse}
+              isListening={isListening}
+              setIsListening={setIsListening}
+            />
+
+            <Button
+              type="submit"
+              disabled={isLoading || !input.trim() || isListening}
+              className="btn-primary rounded-xl px-6 shrink-0"
+            >
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

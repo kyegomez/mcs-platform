@@ -1,215 +1,308 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
-import { agents } from "@/data/agents"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { DashboardMetrics } from "@/components/dashboard-metrics"
-import { AgentSearch } from "@/components/agent-search"
-import { Pagination } from "@/components/pagination"
-import { Sparkles, ArrowRight, Zap } from "lucide-react"
 import { AlertManager } from "@/components/alert-manager"
+import { agents } from "@/data/agents"
+import { AgentIcon } from "@/components/agent-icon"
+import { getChatAgentIds, getChatHistory } from "@/lib/chat-storage"
+import Link from "next/link"
+import { ArrowRight, Calendar, FileText, Bell, MessageSquare, Activity } from "lucide-react"
 
-export default function GalleryPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const agentsPerPage = 6
+interface RecentActivity {
+  agentId: string
+  agentName: string
+  specialty: string
+  icon: string
+  iconColor: string
+  lastMessageTime: Date
+  messageCount: number
+}
 
-  // Reset to first page when search or category changes
+export default function Dashboard() {
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
+
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, selectedCategory])
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
 
-  // Filter agents based on search query and selected category
-  const filteredAgents = useMemo(() => {
-    return agents.filter((agent) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description.toLowerCase().includes(searchQuery.toLowerCase())
+    return () => clearInterval(timer)
+  }, [])
 
-      const matchesCategory = selectedCategory === null || agent.specialty === selectedCategory
+  useEffect(() => {
+    // Get real recent activity from chat history
+    const getRecentActivity = () => {
+      const chatAgentIds = getChatAgentIds()
+      const activities: RecentActivity[] = []
 
-      return matchesSearch && matchesCategory
-    })
-  }, [searchQuery, selectedCategory])
+      chatAgentIds.forEach((agentId) => {
+        const agent = agents.find((a) => a.id === agentId)
+        if (agent) {
+          const chatHistory = getChatHistory(agentId)
+          if (chatHistory.length > 0) {
+            const lastMessage = chatHistory[chatHistory.length - 1]
+            activities.push({
+              agentId: agent.id,
+              agentName: agent.name,
+              specialty: agent.specialty,
+              icon: agent.icon,
+              iconColor: agent.iconColor,
+              lastMessageTime: lastMessage.timestamp,
+              messageCount: chatHistory.length,
+            })
+          }
+        }
+      })
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredAgents.length / agentsPerPage)
-  const indexOfLastAgent = currentPage * agentsPerPage
-  const indexOfFirstAgent = indexOfLastAgent - agentsPerPage
-  const currentAgents = filteredAgents.slice(indexOfFirstAgent, indexOfLastAgent)
+      // Sort by most recent activity
+      activities.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime())
 
-  // Handle page change
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
-    document.getElementById("specialists-section")?.scrollIntoView({ behavior: "smooth" })
+      // Take only the 3 most recent
+      setRecentActivity(activities.slice(0, 3))
+    }
+
+    getRecentActivity()
+
+    // Listen for storage changes to update in real-time
+    const handleStorageChange = () => {
+      getRecentActivity()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [])
+
+  // Get featured specialists (first 6)
+  const featuredSpecialists = agents.slice(0, 6)
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) return "Just now"
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+
+    const diffInHours = Math.floor(diffInMinutes / 60)
+    if (diffInHours < 24) return `${diffInHours}h ago`
+
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return `${diffInDays}d ago`
+
+    return date.toLocaleDateString()
   }
 
   return (
     <div className="space-y-8 relative">
-      {/* Background decorations */}
-      <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
+      {/* Background decoration */}
+      <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="text-center space-y-4 py-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-mcs-blue animate-pulse" />
-            <span className="text-sm font-medium text-mcs-blue uppercase tracking-wider">AI-Powered Healthcare</span>
-            <Sparkles className="h-6 w-6 text-mcs-blue animate-pulse" />
+      {/* Alert Manager */}
+      <AlertManager />
+
+      {/* Header Section */}
+      <div className="glass p-6 rounded-xl border border-white/10">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Welcome to <span className="text-mcs-blue">MCS</span>
+            </h1>
+            <p className="text-gray-400">
+              Your AI-powered healthcare companion • {currentTime.toLocaleDateString()} •{" "}
+              {currentTime.toLocaleTimeString()}
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-shadow">
-            Healthcare <span className="gradient-text">Dashboard</span>
-          </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Your personal healthcare metrics and access to specialized medical consultants powered by advanced AI
-            technology.
-          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/chat">
+              <Button className="btn-primary">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Start Chat
+              </Button>
+            </Link>
+            <Link href="/notes">
+              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                <FileText className="h-4 w-4 mr-2" />
+                My Notes
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
+      {/* Metrics Dashboard */}
       <DashboardMetrics />
 
-      {/* Health Alerts */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Health Reminders</h2>
-          <p className="text-gray-400">Automated alerts to help you track your health consistently.</p>
-        </div>
-        <AlertManager />
-      </div>
-
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link href="/chat">
-          <Card className="glass-card hover-glow group cursor-pointer">
+          <Card className="glass-card border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="h-6 w-6 text-mcs-blue" />
+                <div className="h-12 w-12 rounded-xl bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <MessageSquare className="h-6 w-6 text-mcs-blue" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">Quick Consultation</h3>
-                  <p className="text-sm text-gray-400">Start chatting with a specialist instantly</p>
+                <div>
+                  <h3 className="font-semibold text-white">AI Chat</h3>
+                  <p className="text-sm text-gray-400">Talk to specialists</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-mcs-blue group-hover:translate-x-1 transition-all duration-300" />
               </div>
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/notes">
-          <Card className="glass-card hover-glow group cursor-pointer">
+          <Card className="glass-card border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <Sparkles className="h-6 w-6 text-emerald-400" />
+                <div className="h-12 w-12 rounded-xl bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="h-6 w-6 text-green-400" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">Health Journal</h3>
-                  <p className="text-sm text-gray-400">Track your symptoms and observations</p>
+                <div>
+                  <h3 className="font-semibold text-white">Health Notes</h3>
+                  <p className="text-sm text-gray-400">Track your health</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/calendar">
+          <Card className="glass-card border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Calendar className="h-6 w-6 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Calendar</h3>
+                  <p className="text-sm text-gray-400">View appointments</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/alerts">
+          <Card className="glass-card border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Bell className="h-6 w-6 text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Alerts</h3>
+                  <p className="text-sm text-gray-400">Health reminders</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </Link>
       </div>
 
-      <div id="specialists-section" className="scroll-mt-4">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Healthcare Specialists</h2>
-            <p className="text-gray-400">
-              Showing {currentAgents.length} of {filteredAgents.length} specialists
-            </p>
-          </div>
+      {/* Featured Specialists */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">Featured Specialists</h2>
+          <Link href="/chat">
+            <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/20">
+              View All <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </Link>
         </div>
 
-        <AgentSearch
-          onSearch={setSearchQuery}
-          onCategoryChange={setSelectedCategory}
-          selectedCategory={selectedCategory}
-        />
-
-        {filteredAgents.length === 0 ? (
-          <Card className="glass-card">
-            <CardContent className="p-12 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-600 to-gray-500 flex items-center justify-center">
-                <Sparkles className="h-8 w-8 text-gray-300" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">No specialists found</h3>
-              <p className="text-gray-400 mb-4">No specialists match your current search criteria.</p>
-              <button
-                onClick={() => {
-                  setSearchQuery("")
-                  setSelectedCategory(null)
-                }}
-                className="btn-primary px-6 py-2 rounded-lg text-white font-medium"
-              >
-                Clear filters
-              </button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentAgents.map((agent, index) => (
-                <Link key={agent.id} href={`/chat/${agent.id}`}>
-                  <Card className="glass-card hover-glow group h-full overflow-hidden">
-                    <div className="relative h-48 w-full overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-                      <Image
-                        src={agent.avatar || "/placeholder.svg"}
-                        alt={agent.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-4 right-4 z-20">
-                        <div className="status-online h-3 w-3 rounded-full pulse-blue"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredSpecialists.map((agent) => (
+            <Link key={agent.id} href={`/chat/${agent.id}`}>
+              <Card className="glass-card border-white/10 hover:border-mcs-blue/50 transition-all duration-300 cursor-pointer group h-full">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="relative">
+                      <div
+                        className="h-12 w-12 rounded-xl flex items-center justify-center border-2 transition-all duration-300 group-hover:scale-110"
+                        style={{
+                          borderColor: agent.iconColor + "30",
+                          backgroundColor: agent.iconColor + "10",
+                        }}
+                      >
+                        <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
                       </div>
+                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full status-online border-2 border-black"></div>
                     </div>
-
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-3 text-white">
-                        <span className="h-2 w-2 rounded-full bg-gradient-to-r from-mcs-blue to-mcs-blue-light pulse-blue" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white group-hover:text-mcs-blue transition-colors">
                         {agent.name}
-                      </CardTitle>
-                    </CardHeader>
-
-                    <CardContent className="pb-4">
-                      <div className="space-y-3">
-                        <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 border border-mcs-blue/30">
-                          <span className="text-sm font-medium text-mcs-blue">{agent.specialty}</span>
-                        </div>
-                        <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">{agent.description}</p>
-                      </div>
-                    </CardContent>
-
-                    <CardFooter className="pt-0">
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
-                          <span>Available now</span>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-mcs-blue group-hover:translate-x-1 transition-all duration-300" />
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {totalPages > 1 && (
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-            )}
-          </>
-        )}
+                      </h3>
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-white/20 text-gray-300 mt-1"
+                        style={{ borderColor: agent.iconColor + "30", color: agent.iconColor }}
+                      >
+                        {agent.specialty}
+                      </Badge>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-400 line-clamp-2 mb-4">{agent.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-green-400 flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                      Available now
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-mcs-blue transition-colors" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
+
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <Card className="glass-card border-white/10">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Activity className="h-5 w-5 text-mcs-blue" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription className="text-gray-400">Your latest specialist conversations</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentActivity.map((activity) => (
+              <Link key={activity.agentId} href={`/chat/${activity.agentId}`}>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+                  <div
+                    className="h-10 w-10 rounded-lg flex items-center justify-center border transition-all duration-300 group-hover:scale-105"
+                    style={{
+                      borderColor: activity.iconColor + "30",
+                      backgroundColor: activity.iconColor + "10",
+                    }}
+                  >
+                    <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white group-hover:text-mcs-blue transition-colors">
+                      {activity.agentName}
+                    </p>
+                    <p className="text-xs text-gray-400">{activity.specialty}</p>
+                    <p className="text-xs text-gray-500">{activity.messageCount} messages</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-gray-400">{formatTimeAgo(activity.lastMessageTime)}</span>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
