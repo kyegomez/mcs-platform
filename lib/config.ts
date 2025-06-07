@@ -11,18 +11,12 @@ export function isApiKeyConfigured(): boolean {
   return isConfigured
 }
 
-// Get API key from environment variables
-export function getApiKey(): string {
+// Get API headers with authentication
+export function getApiHeaders(): HeadersInit {
   const apiKey = process.env.SWARMS_API_KEY || ""
   if (!apiKey) {
     console.warn("Warning: SWARMS_API_KEY is not configured")
   }
-  return apiKey
-}
-
-// Get API headers with authentication
-export function getApiHeaders(): HeadersInit {
-  const apiKey = getApiKey()
 
   return {
     "Content-Type": "application/json",

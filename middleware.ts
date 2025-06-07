@@ -1,62 +1,28 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { createServerClient } from "@supabase/ssr"
 
-export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+export function middleware(request: NextRequest) {
+  // Check if the request is for our API routes
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    // Clone the request headers
+    const requestHeaders = new Headers(request.headers)
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          })
-        },
+    // Add the SWARMS_API_KEY from environment variables if it's not already set
+    if (!requestHeaders.has("x-api-key") && process.env.SWARMS_API_KEY) {
+      requestHeaders.set("x-api-key", process.env.SWARMS_API_KEY)
+    }
+
+    // Return the response with the modified headers
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
       },
-    },
-  )
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If the user is not signed in and the route is protected, redirect to the login page
-  const isProtectedRoute =
-    request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/profile")
-
-  if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    })
   }
 
-  // If the user is signed in and trying to access login/register pages, redirect to dashboard
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/register")
-
-  if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
-
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/login", "/register"],
+  matcher: "/api/:path*",
 }

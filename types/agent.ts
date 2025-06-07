@@ -3,6 +3,7 @@ export interface Agent {
   name: string
   specialty: string
   description: string
+  avatar: string
   systemPrompt: string
 }
 
@@ -11,8 +12,16 @@ export interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  chatId?: string
   agentId?: string
+}
+
+export interface FileAttachment {
+  id: string
+  name: string
+  type: string
+  size: number
+  url: string
+  uploadedAt: Date
 }
 
 export interface Note {
@@ -21,6 +30,11 @@ export interface Note {
   content: string
   createdAt: Date
   updatedAt: Date
+  tags: string[]
+  category: string
+  attachments: FileAttachment[]
+  color: string
+  pinned: boolean
 }
 
 export interface Alert {
@@ -31,13 +45,4 @@ export interface Alert {
   read: boolean
   createdAt: Date
   agentId: string
-}
-
-export interface Chat {
-  id: string
-  userId: string
-  agentId: string
-  createdAt: Date
-  updatedAt: Date
-  messages?: ChatMessage[]
 }

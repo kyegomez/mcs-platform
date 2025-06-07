@@ -4,9 +4,11 @@ import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { agents } from "@/data/agents"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image"
 import { DashboardMetrics } from "@/components/dashboard-metrics"
 import { AgentSearch } from "@/components/agent-search"
 import { Pagination } from "@/components/pagination"
+import { Sparkles, ArrowRight, Zap } from "lucide-react"
 
 export default function GalleryPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -43,25 +45,79 @@ export default function GalleryPage() {
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber)
-    // Scroll to the top of the agents section
     document.getElementById("specialists-section")?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Healthcare Dashboard</h1>
-        <p className="text-mcs-gray-light">Your personal healthcare metrics and specialized medical consultants.</p>
+    <div className="space-y-8 relative">
+      {/* Background decorations */}
+      <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
+
+      {/* Hero Section */}
+      <div className="relative">
+        <div className="text-center space-y-4 py-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="h-6 w-6 text-mcs-blue animate-pulse" />
+            <span className="text-sm font-medium text-mcs-blue uppercase tracking-wider">AI-Powered Healthcare</span>
+            <Sparkles className="h-6 w-6 text-mcs-blue animate-pulse" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-shadow">
+            Healthcare <span className="gradient-text">Dashboard</span>
+          </h1>
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            Your personal healthcare metrics and access to specialized medical consultants powered by advanced AI
+            technology.
+          </p>
+        </div>
       </div>
 
       <DashboardMetrics />
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <Link href="/chat">
+          <Card className="glass-card hover-glow group cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="h-6 w-6 text-mcs-blue" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white mb-1">Quick Consultation</h3>
+                  <p className="text-sm text-gray-400">Start chatting with a specialist instantly</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-mcs-blue group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/notes">
+          <Card className="glass-card hover-glow group cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Sparkles className="h-6 w-6 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white mb-1">Health Journal</h3>
+                  <p className="text-sm text-gray-400">Track your symptoms and observations</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
       <div id="specialists-section" className="scroll-mt-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Healthcare Specialists</h2>
-          <p className="text-sm text-mcs-gray-light">
-            Showing {currentAgents.length} of {filteredAgents.length} specialists
-          </p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Healthcare Specialists</h2>
+            <p className="text-gray-400">
+              Showing {currentAgents.length} of {filteredAgents.length} specialists
+            </p>
+          </div>
         </div>
 
         <AgentSearch
@@ -71,38 +127,66 @@ export default function GalleryPage() {
         />
 
         {filteredAgents.length === 0 ? (
-          <div className="bg-black border border-mcs-gray rounded-lg p-8 text-center">
-            <p className="text-mcs-gray-light">No specialists found matching your criteria.</p>
-            <button
-              onClick={() => {
-                setSearchQuery("")
-                setSelectedCategory(null)
-              }}
-              className="mt-4 text-mcs-blue hover:underline"
-            >
-              Clear filters
-            </button>
-          </div>
+          <Card className="glass-card">
+            <CardContent className="p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-600 to-gray-500 flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-gray-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">No specialists found</h3>
+              <p className="text-gray-400 mb-4">No specialists match your current search criteria.</p>
+              <button
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedCategory(null)
+                }}
+                className="btn-primary px-6 py-2 rounded-lg text-white font-medium"
+              >
+                Clear filters
+              </button>
+            </CardContent>
+          </Card>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentAgents.map((agent) => (
+              {currentAgents.map((agent, index) => (
                 <Link key={agent.id} href={`/chat/${agent.id}`}>
-                  <Card className="h-full transition-all duration-200 hover:border-mcs-blue hover:shadow-[0_0_15px_rgba(0,112,243,0.15)] bg-black border-mcs-gray">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <span className="h-3 w-3 rounded-full bg-mcs-blue animate-pulse" />
+                  <Card className="glass-card hover-glow group h-full overflow-hidden">
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                      <Image
+                        src={agent.avatar || "/placeholder.svg"}
+                        alt={agent.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 right-4 z-20">
+                        <div className="status-online h-3 w-3 rounded-full pulse-blue"></div>
+                      </div>
+                    </div>
+
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-3 text-white">
+                        <span className="h-2 w-2 rounded-full bg-gradient-to-r from-mcs-blue to-mcs-blue-light pulse-blue" />
                         {agent.name}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm font-medium text-mcs-blue mb-2">{agent.specialty}</p>
-                      <p className="text-sm text-mcs-gray-light">{agent.description}</p>
+
+                    <CardContent className="pb-4">
+                      <div className="space-y-3">
+                        <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 border border-mcs-blue/30">
+                          <span className="text-sm font-medium text-mcs-blue">{agent.specialty}</span>
+                        </div>
+                        <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">{agent.description}</p>
+                      </div>
                     </CardContent>
-                    <CardFooter>
-                      <div className="text-xs text-mcs-gray-light flex items-center gap-1">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-mcs-blue"></span>
-                        Available for consultation
+
+                    <CardFooter className="pt-0">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
+                          <span>Available now</span>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-mcs-blue group-hover:translate-x-1 transition-all duration-300" />
                       </div>
                     </CardFooter>
                   </Card>

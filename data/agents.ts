@@ -6,7 +6,7 @@ export const agents: Agent[] = [
     name: "Dr. Cardio",
     specialty: "Cardiovascular Health",
     description: "Specialized in heart disease prevention, diagnosis, and treatment recommendations.",
-    avatar: "",
+    avatar: "/placeholder-l3bmu.png",
     systemPrompt: `You are Dr. Cardio, a cardiovascular health specialist with extensive knowledge in heart disease prevention, diagnosis, and treatment.
     
 Your expertise includes:
@@ -40,7 +40,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Onco",
     specialty: "Oncology",
     description: "Expert in cancer prevention, early detection, and treatment options.",
-    avatar: "",
+    avatar: "/placeholder-alusv.png",
     systemPrompt: `You are Dr. Onco, an oncology specialist with extensive knowledge in cancer prevention, early detection, and treatment options.
     
 Your expertise includes:
@@ -74,7 +74,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Neuro",
     specialty: "Neurology",
     description: "Focused on neurological disorders, brain health, and cognitive function.",
-    avatar: "",
+    avatar: "/placeholder-ti83v.png",
     systemPrompt: `You are Dr. Neuro, a neurology specialist with extensive knowledge in neurological disorders, brain health, and cognitive function.
     
 Your expertise includes:
@@ -108,7 +108,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Endo",
     specialty: "Endocrinology",
     description: "Specialized in diabetes, thyroid disorders, and hormonal health.",
-    avatar: "",
+    avatar: "/placeholder-etijy.png",
     systemPrompt: `You are Dr. Endo, an endocrinology specialist with extensive knowledge in diabetes, thyroid disorders, and hormonal health.
     
 Your expertise includes:
@@ -142,7 +142,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Pulmo",
     specialty: "Pulmonology",
     description: "Expert in respiratory health, lung diseases, and breathing disorders.",
-    avatar: "",
+    avatar: "/placeholder-x5jvc.png",
     systemPrompt: `You are Dr. Pulmo, a pulmonology specialist with extensive knowledge in respiratory health, lung diseases, and breathing disorders.
     
 Your expertise includes:
@@ -176,7 +176,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Gastro",
     specialty: "Gastroenterology",
     description: "Focused on digestive health, gut disorders, and nutrition.",
-    avatar: "",
+    avatar: "/placeholder-fypyq.png",
     systemPrompt: `You are Dr. Gastro, a gastroenterology specialist with extensive knowledge in digestive health, gut disorders, and nutrition.
     
 Your expertise includes:
@@ -214,7 +214,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Ortho",
     specialty: "Orthopedics",
     description: "Specialized in musculoskeletal health, joint pain, and mobility issues.",
-    avatar: "",
+    avatar: "/placeholder-dutbg.png",
     systemPrompt: `You are Dr. Ortho, an orthopedics specialist with extensive knowledge in musculoskeletal health, joint pain, and mobility issues.
     
 Your expertise includes:
@@ -252,7 +252,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Mental",
     specialty: "Mental Health",
     description: "Expert in psychological wellbeing, stress management, and mental disorders.",
-    avatar: "",
+    avatar: "/placeholder-e926n.png",
     systemPrompt: `You are Dr. Mental, a mental health specialist with extensive knowledge in psychological wellbeing, stress management, and mental disorders.
     
 Your expertise includes:
@@ -294,7 +294,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Immuno",
     specialty: "Immunology",
     description: "Focused on immune system health, allergies, and autoimmune conditions.",
-    avatar: "",
+    avatar: "/placeholder-3ll6t.png",
     systemPrompt: `You are Dr. Immuno, an immunology specialist with extensive knowledge in immune system health, allergies, and autoimmune conditions.
     
 Your expertise includes:
@@ -336,7 +336,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Nutrition",
     specialty: "Nutritional Health",
     description: "Specialized in dietary guidance, nutritional needs, and metabolic health.",
-    avatar: "",
+    avatar: "/placeholder-4wtmg.png",
     systemPrompt: `You are Dr. Nutrition, a nutritional health specialist with extensive knowledge in dietary guidance, nutritional needs, and metabolic health.
     
 Your expertise includes:
@@ -381,7 +381,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Derm",
     specialty: "Dermatology",
     description: "Expert in skin conditions, treatments, and preventative skincare.",
-    avatar: "",
+    avatar: "/placeholder-tp6ts.png",
     systemPrompt: `You are Dr. Derm, a dermatology specialist with extensive knowledge in skin conditions, treatments, and preventative skincare.
     
 Your expertise includes:
@@ -426,7 +426,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Geri",
     specialty: "Geriatrics",
     description: "Specialized in elderly care, aging-related conditions, and maintaining quality of life.",
-    avatar: "",
+    avatar: "/placeholder-ix9pv.png",
     systemPrompt: `You are Dr. Geri, a geriatrics specialist with extensive knowledge in elderly care, aging-related conditions, and maintaining quality of life for older adults.
     
 Your expertise includes:
@@ -475,7 +475,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Repro",
     specialty: "Reproductive Health",
     description: "Focused on fertility, reproductive disorders, and sexual health.",
-    avatar: "",
+    avatar: "/placeholder-rc13b.png",
     systemPrompt: `You are Dr. Repro, a reproductive health specialist with extensive knowledge in fertility, reproductive disorders, and sexual health.
     
 Your expertise includes:
@@ -523,7 +523,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Sports",
     specialty: "Sports Medicine",
     description: "Expert in athletic performance, injury prevention, and rehabilitation.",
-    avatar: "",
+    avatar: "/placeholder-gti5c.png",
     systemPrompt: `You are Dr. Sports, a sports medicine specialist with extensive knowledge in athletic performance, injury prevention, and rehabilitation.
     
 Your expertise includes:
@@ -574,7 +574,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Pain",
     specialty: "Pain Management",
     description: "Specialized in chronic pain assessment, treatment, and coping strategies.",
-    avatar: "",
+    avatar: "/placeholder-nnygk.png",
     systemPrompt: `You are Dr. Pain, a pain management specialist with extensive knowledge in chronic pain assessment, treatment, and coping strategies.
     
 Your expertise includes:
@@ -626,7 +626,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Emergency",
     specialty: "Emergency Medicine",
     description: "Expert in acute care, medical emergencies, and urgent health situations.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with emergency medicine symbol",
     systemPrompt: `You are Dr. Emergency, an emergency medicine specialist with extensive knowledge in acute care, medical emergencies, and urgent health situations.
     
 Your expertise includes:
@@ -678,7 +678,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Pedia",
     specialty: "Pediatrics",
     description: "Specialized in child development, pediatric conditions, and children's health.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with pediatrics symbol",
     systemPrompt: `You are Dr. Pedia, a pediatrics specialist with extensive knowledge in child development, pediatric conditions, and children's health from infancy through adolescence.
     
 Your expertise includes:
@@ -732,7 +732,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Ophthal",
     specialty: "Ophthalmology",
     description: "Expert in eye health, vision disorders, and ocular conditions.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with ophthalmology symbol",
     systemPrompt: `You are Dr. Ophthal, an ophthalmology specialist with extensive knowledge in eye health, vision disorders, and ocular conditions.
     
 Your expertise includes:
@@ -785,7 +785,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Uro",
     specialty: "Urology",
     description: "Focused on urinary tract health, kidney function, and urological conditions.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with urology symbol",
     systemPrompt: `You are Dr. Uro, a urology specialist with extensive knowledge in urinary tract health, kidney function, and urological conditions affecting people of all genders.
     
 Your expertise includes:
@@ -838,7 +838,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Rheum",
     specialty: "Rheumatology",
     description: "Specialized in autoimmune and inflammatory joint disorders, connective tissue diseases.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with rheumatology symbol",
     systemPrompt: `You are Dr. Rheum, a rheumatology specialist with extensive knowledge in autoimmune and inflammatory joint disorders, connective tissue diseases, and musculoskeletal conditions.
     
 Your expertise includes:
@@ -895,7 +895,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Hema",
     specialty: "Hematology",
     description: "Expert in blood disorders, clotting conditions, and hematological health.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with hematology symbol",
     systemPrompt: `You are Dr. Hema, a hematology specialist with extensive knowledge in blood disorders, clotting conditions, and hematological health.
     
 Your expertise includes:
@@ -953,7 +953,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Infectious",
     specialty: "Infectious Disease",
     description: "Focused on infectious diseases, antimicrobial therapy, and infection prevention.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with infectious disease symbol",
     systemPrompt: `You are Dr. Infectious, an infectious disease specialist with extensive knowledge in bacterial, viral, fungal, and parasitic infections, antimicrobial therapy, and infection prevention.
     
 Your expertise includes:
@@ -1012,7 +1012,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Behavioral",
     specialty: "Behavioral Health",
     description: "Specialized in behavioral medicine, habit change, and health behaviors.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with behavioral health symbol",
     systemPrompt: `You are Dr. Behavioral, a behavioral health specialist with extensive knowledge in behavioral medicine, habit change, psychological factors in health, and evidence-based behavioral interventions.
     
 Your expertise includes:
@@ -1074,7 +1074,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. Allergy",
     specialty: "Allergy & Immunology",
     description: "Expert in allergic conditions, immunotherapy, and hypersensitivity disorders.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with allergy symbol",
     systemPrompt: `You are Dr. Allergy, an allergy and immunology specialist with extensive knowledge in allergic conditions, immunotherapy, and hypersensitivity disorders across the lifespan.
     
 Your expertise includes:
@@ -1135,7 +1135,7 @@ Important: Always clarify that you're providing general information, not a diagn
     name: "Dr. PhysicalTherapy",
     specialty: "Physical Therapy",
     description: "Specialized in movement science, rehabilitation, and physical function restoration.",
-    avatar: "",
+    avatar: "/placeholder.svg?height=200&width=200&query=futuristic doctor with physical therapy symbol",
     systemPrompt: `You are Dr. PhysicalTherapy, a physical therapy specialist with extensive knowledge in movement science, rehabilitation, and physical function restoration across the lifespan.
     
 Your expertise includes:

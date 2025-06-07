@@ -1,73 +1,75 @@
-import { NextResponse } from "next/server"
-import { getApiKey } from "@/lib/config"
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: Request) {
+// Update the base URL
+const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
+
+export async function POST(request: NextRequest) {
   try {
-    const apiKey = getApiKey()
+    const { agent_config, task, history } = await request.json()
+
+    // Get the API key from environment variables
+    const apiKey = process.env.SWARMS_API_KEY
+
     if (!apiKey) {
-      console.error("[SERVER] No API key found")
-      return NextResponse.json(
-        { error: "API key not configured. Please set the SWARMS_API_KEY environment variable." },
-        { status: 500 },
-      )
+      console.error("SWARMS_API_KEY is not configured")
+      return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
     }
 
-    const body = await request.json()
-    console.log("[SERVER] Received request body:", {
-      agent_name: body.agent_config?.agent_name,
-      task_length: body.task?.length,
+    // Log the history being sent to the API
+    console.log("Making request to Swarms API with:", {
+      url: `${SWARMS_API_URL}/v1/agent/completions`,
+      agent_name: agent_config?.agent_name,
+      task_length: task?.length,
+      history_length: history?.length,
+      history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    // Ensure the model name is set to gpt-4o-mini
-    if (body.agent_config && body.agent_config.model_name !== "gpt-4o-mini") {
-      console.log("[SERVER] Overriding model name to gpt-4o-mini")
-      body.agent_config.model_name = "gpt-4o-mini"
+    const payload = {
+      agent_config,
+      task,
     }
 
-    // Make the request to the Swarms API
-    const swarmsResponse = await fetch("https://swarms-api-285321057562.us-east1.run.app/agent/chat", {
+    // If history exists, add it to the payload
+    if (history && history.length > 0) {
+      payload.history = history
+    }
+
+    const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
 
-    if (!swarmsResponse.ok) {
-      const errorText = await swarmsResponse.text()
-      console.error(`[SERVER] Swarms API error: ${swarmsResponse.status}`, errorText)
-      return NextResponse.json(
-        { error: `Error from Swarms API: ${swarmsResponse.status}`, details: errorText },
-        { status: swarmsResponse.status },
-      )
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("Swarms API error:", errorText)
+      return NextResponse.json({ error: `Swarms API error: ${errorText}` }, { status: response.status })
     }
 
-    const data = await swarmsResponse.json()
-    console.log("[SERVER] Swarms API response:", {
-      success: data.success,
-      outputsLength: data.outputs?.length,
-      keys: Object.keys(data),
-    })
+    const data = await response.json()
+    console.log("Swarms API response structure:", Object.keys(data))
 
-    // Process the response
+    // Process the response to make it easier to use on the client
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
-      console.log("[SERVER] Found output content:", {
-        content: lastOutput?.content?.substring(0, 100) + "...",
-      })
 
-      // Return both the processed output and the full response
-      return NextResponse.json({
-        ...data,
-        processedOutput: lastOutput?.content || null,
-      })
+      // Add a processed field to make it easier for the client
+      data.processedOutput = lastOutput?.content || "No content found in response"
     }
 
-    // If we couldn't process the output, return the raw response
     return NextResponse.json(data)
   } catch (error) {
-    console.error("[SERVER] Error in chat route:", error)
-    return NextResponse.json({ error: "Internal server error", details: (error as Error).message }, { status: 500 })
+    console.error("Error in agent chat API:", error)
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

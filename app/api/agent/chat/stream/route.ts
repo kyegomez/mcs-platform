@@ -1,98 +1,136 @@
-import { NextResponse } from "next/server"
-import { getApiKey } from "@/lib/config"
+import type { NextRequest } from "next/server"
 
-export async function POST(request: Request) {
+// Update the base URL
+const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
+
+export async function POST(request: NextRequest) {
   try {
-    const apiKey = getApiKey()
+    const { agent_config, task, history } = await request.json()
+
+    // Get the API key from environment variables
+    const apiKey = process.env.SWARMS_API_KEY
+
+    // Log the API key status (without revealing the key)
+    console.log("API Key status:", apiKey ? "Configured" : "Not configured")
+
     if (!apiKey) {
-      console.error("[SERVER-STREAM] No API key found")
-      return NextResponse.json(
-        { error: "API key not configured. Please set the SWARMS_API_KEY environment variable." },
-        { status: 500 },
-      )
+      console.error("SWARMS_API_KEY environment variable is not configured")
+      return new Response(JSON.stringify({ error: "SWARMS_API_KEY is not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    const body = await request.json()
-    console.log("[SERVER-STREAM] Received request body:", {
-      agent_name: body.agent_config?.agent_name,
-      task_length: body.task?.length,
+    // Log the history being sent to the API
+    console.log("Making request to Swarms API with:", {
+      url: `${SWARMS_API_URL}/v1/agent/completions`,
+      agent_name: agent_config?.agent_name,
+      task_length: task?.length,
+      history_length: history?.length,
+      history_sample: history?.slice(-2), // Log last 2 messages for debugging
     })
 
-    // Ensure the model name is set to gpt-4o-mini
-    if (body.agent_config && body.agent_config.model_name !== "gpt-4o-mini") {
-      console.log("[SERVER-STREAM] Overriding model name to gpt-4o-mini")
-      body.agent_config.model_name = "gpt-4o-mini"
+    const payload = {
+      agent_config,
+      task,
     }
 
-    // Make the request to the Swarms API
-    const swarmsResponse = await fetch("https://swarms-api-285321057562.us-east1.run.app/agent/chat", {
+    // If history exists, add it to the payload
+    if (history && history.length > 0) {
+      payload.history = history
+    }
+
+    const swarmsResponse = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
 
     if (!swarmsResponse.ok) {
       const errorText = await swarmsResponse.text()
-      console.error(`[SERVER-STREAM] Swarms API error: ${swarmsResponse.status}`, errorText)
-      return NextResponse.json(
-        { error: `Error from Swarms API: ${swarmsResponse.status}`, details: errorText },
-        { status: swarmsResponse.status },
+      console.error("Swarms API error:", errorText)
+      return new Response(JSON.stringify({ error: `Swarms API error: ${errorText}` }), {
+        status: swarmsResponse.status,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    const data = await swarmsResponse.json()
+    console.log("Swarms API response structure:", Object.keys(data))
+
+    // Check if the response has the expected structure
+    if (!data || !data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {
+      console.error("Unexpected response structure:", data)
+      return new Response(
+        JSON.stringify({
+          error: "Unexpected response structure from Swarms API",
+          data: data,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
       )
     }
 
-    // Clone the response so we can read it twice
-    const responseForJson = swarmsResponse.clone()
+    // Get the last output from the array, which should contain the actual response
+    const lastOutput = data.outputs[data.outputs.length - 1]
 
-    // Parse the JSON response
-    const data = await responseForJson.json()
-    console.log("[SERVER-STREAM] Swarms API response:", {
-      success: data.success,
-      outputsLength: data.outputs?.length,
-      keys: Object.keys(data),
-    })
-
-    // Process the response
-    if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
-      const lastOutput = data.outputs[data.outputs.length - 1]
-      console.log("[SERVER-STREAM] Found output content:", {
-        content: lastOutput?.content?.substring(0, 100) + "...",
-      })
-
-      // Create a stream from the content
-      const content = lastOutput?.content || "No content found in response"
-      const stream = new ReadableStream({
-        start(controller) {
-          // Send the content in chunks to simulate streaming
-          const encoder = new TextEncoder()
-          const chunks = content.match(/.{1,5}/g) || []
-
-          let i = 0
-          const interval = setInterval(() => {
-            if (i < chunks.length) {
-              controller.enqueue(encoder.encode(chunks[i]))
-              i++
-            } else {
-              clearInterval(interval)
-              controller.close()
-            }
-          }, 15)
+    if (!lastOutput || typeof lastOutput.content !== "string") {
+      console.error("Invalid output content:", lastOutput)
+      return new Response(
+        JSON.stringify({
+          error: "Invalid output content from Swarms API",
+          output: lastOutput,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
         },
-      })
-
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-        },
-      })
+      )
     }
 
-    // If we couldn't process the output, return an error
-    return NextResponse.json({ error: "Could not extract content from Swarms API response", data }, { status: 500 })
+    const content = lastOutput.content
+
+    // Create a stream from the response
+    const stream = new ReadableStream({
+      start(controller) {
+        // Simulate streaming by sending chunks of the response
+        const chunkSize = 5 // Characters per chunk
+
+        let index = 0
+        const interval = setInterval(() => {
+          if (index < content.length) {
+            const chunk = content.slice(index, index + chunkSize)
+            controller.enqueue(new TextEncoder().encode(chunk))
+            index += chunkSize
+          } else {
+            clearInterval(interval)
+            controller.close()
+          }
+        }, 15) // Adjust timing for realistic streaming
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    })
   } catch (error) {
-    console.error("[SERVER-STREAM] Error in stream route:", error)
-    return NextResponse.json({ error: "Internal server error", details: (error as Error).message }, { status: 500 })
+    console.error("Error in agent chat streaming API:", error)
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   }
 }

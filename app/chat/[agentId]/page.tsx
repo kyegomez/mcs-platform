@@ -10,78 +10,56 @@ import { streamChatWithAgent } from "@/lib/swarms-api"
 import { v4 as uuidv4 } from "uuid"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Send, AlertCircle, Trash2 } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Trash2, Bot, User, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/auth-context"
-import { chatService } from "@/lib/services/chat-service"
-import { MarkdownMessage } from "@/components/markdown-message"
+import Image from "next/image"
+import { getChatHistory, saveChatHistory } from "@/lib/chat-storage"
 
 export default function ChatPage() {
   const params = useParams()
   const router = useRouter()
   const { agentId } = params
   const agent = agents.find((a) => a.id === agentId)
-  const { user, isLoading: authLoading } = useAuth()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [chatId, setChatId] = useState<string | null>(null)
-  const [isLoadingChat, setIsLoadingChat] = useState(true)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Load chat history from database
+  // Load chat history from localStorage
   useEffect(() => {
-    if (!agent || !user) {
-      if (!authLoading && !agent) {
-        router.push("/chat")
-      }
+    if (!agent) {
+      router.push("/")
       return
     }
 
-    const loadChatHistory = async () => {
-      setIsLoadingChat(true)
-      try {
-        // Get or create a chat for this agent
-        const chatId = await chatService.getOrCreateChat(user.id, agent.id)
-        setChatId(chatId)
+    const savedMessages = getChatHistory(agent.id)
 
-        // Get messages for this chat
-        const chatMessages = await chatService.getChatMessages(chatId)
-
-        if (chatMessages.length > 0) {
-          setMessages(chatMessages)
-        } else {
-          // Add welcome message if no history exists
-          const welcomeMessage: ChatMessage = {
-            id: uuidv4(),
-            role: "assistant",
-            content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
-            timestamp: new Date(),
-            chatId,
-          }
-          setMessages([welcomeMessage])
-
-          // Save welcome message to database
-          await chatService.addMessage(chatId, {
-            role: welcomeMessage.role,
-            content: welcomeMessage.content,
-            timestamp: welcomeMessage.timestamp,
-          })
-        }
-      } catch (error) {
-        console.error("Error loading chat history:", error)
-        setError("Failed to load chat history. Please try again.")
-      } finally {
-        setIsLoadingChat(false)
-      }
+    if (savedMessages.length > 0) {
+      setMessages(savedMessages)
+    } else {
+      // Add welcome message if no history exists
+      setMessages([
+        {
+          id: uuidv4(),
+          role: "assistant",
+          content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
+          timestamp: new Date(),
+          agentId: agent.id,
+        },
+      ])
     }
+  }, [agent, router])
 
-    loadChatHistory()
-  }, [agent, user, router, authLoading])
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (agent && messages.length > 0) {
+      saveChatHistory(agent.id, messages)
+    }
+  }, [agent, messages])
 
   useEffect(() => {
     scrollToBottom()
@@ -94,15 +72,14 @@ export default function ChatPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!input.trim() || isLoading || !agent || !chatId || !user) return
+    if (!input.trim() || isLoading || !agent) return
 
     setError(null)
     const userMessage: ChatMessage = {
-      id: uuidv4(), // Temporary ID
+      id: uuidv4(),
       role: "user",
       content: input,
       timestamp: new Date(),
-      chatId,
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -111,16 +88,6 @@ export default function ChatPage() {
     setCurrentStreamingMessage("")
 
     try {
-      // Save user message to database
-      const savedUserMessage = await chatService.addMessage(chatId, {
-        role: userMessage.role,
-        content: userMessage.content,
-        timestamp: userMessage.timestamp,
-      })
-
-      // Update the message with the saved ID
-      setMessages((prev) => prev.map((msg) => (msg.id === userMessage.id ? savedUserMessage : msg)))
-
       // Get all messages except the welcome message for the API
       const historyForApi = messages.filter(
         (msg) => !(msg.role === "assistant" && msg.content.includes(`Hello, I'm ${agent.name}`)),
@@ -128,38 +95,21 @@ export default function ChatPage() {
 
       let fullResponse = ""
 
-      await streamChatWithAgent(
-        agent,
-        input,
-        [...historyForApi, userMessage], // Include the current user message in history
-        (chunk) => {
-          fullResponse += chunk
-          setCurrentStreamingMessage(fullResponse)
-        },
-      )
-
-      console.log("[CLIENT-CHAT] Received full response:", {
-        length: fullResponse.length,
-        preview: fullResponse.substring(0, 100) + "...",
+      await streamChatWithAgent(agent, input, [...historyForApi, userMessage], (chunk) => {
+        fullResponse += chunk
+        setCurrentStreamingMessage(fullResponse)
       })
 
       // Create the assistant message with the full response
       const assistantMessage: ChatMessage = {
-        id: uuidv4(), // Temporary ID
+        id: uuidv4(),
         role: "assistant",
         content: fullResponse || "I processed your request, but didn't receive a response. Please try again.",
         timestamp: new Date(),
-        chatId,
+        agentId: agent.id,
       }
 
-      // Save assistant message to database
-      const savedAssistantMessage = await chatService.addMessage(chatId, {
-        role: assistantMessage.role,
-        content: assistantMessage.content,
-        timestamp: assistantMessage.timestamp,
-      })
-
-      setMessages((prev) => [...prev, savedAssistantMessage])
+      setMessages((prev) => [...prev, assistantMessage])
       setCurrentStreamingMessage("")
     } catch (error) {
       console.error("Error in chat:", error)
@@ -174,20 +124,7 @@ export default function ChatPage() {
         role: "assistant",
         content: "I'm sorry, I encountered an error processing your request. Please try again.",
         timestamp: new Date(),
-        chatId,
-      }
-
-      // Save error message to database
-      if (chatId) {
-        try {
-          await chatService.addMessage(chatId, {
-            role: errorMessage.role,
-            content: errorMessage.content,
-            timestamp: errorMessage.timestamp,
-          })
-        } catch (e) {
-          console.error("Error saving error message:", e)
-        }
+        agentId: agent.id,
       }
 
       setMessages((prev) => [...prev, errorMessage])
@@ -197,161 +134,180 @@ export default function ChatPage() {
     }
   }
 
-  const clearChatHistory = async () => {
-    if (!agent || !chatId || !user) return
+  const clearChatHistory = () => {
+    if (!agent) return
 
-    try {
-      // Delete the chat from the database
-      await chatService.deleteChat(chatId)
-
-      // Create a new chat
-      const newChatId = await chatService.getOrCreateChat(user.id, agent.id)
-      setChatId(newChatId)
-
-      // Add only the welcome message
-      const welcomeMessage: ChatMessage = {
-        id: uuidv4(),
-        role: "assistant",
-        content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
-        timestamp: new Date(),
-        chatId: newChatId,
-      }
-
-      // Save welcome message to database
-      await chatService.addMessage(newChatId, {
-        role: welcomeMessage.role,
-        content: welcomeMessage.content,
-        timestamp: welcomeMessage.timestamp,
-      })
-
-      setMessages([welcomeMessage])
-    } catch (error) {
-      console.error("Error clearing chat history:", error)
-      setError("Failed to clear chat history. Please try again.")
+    const welcomeMessage: ChatMessage = {
+      id: uuidv4(),
+      role: "assistant",
+      content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
+      timestamp: new Date(),
+      agentId: agent.id,
     }
+
+    setMessages([welcomeMessage])
   }
 
-  if (authLoading || !user) {
+  if (!agent) {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center">
+      <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mcs-blue mx-auto"></div>
-          <p className="mt-4 text-mcs-gray-light">Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-mcs-blue" />
+          <p className="text-gray-400">Loading specialist...</p>
         </div>
       </div>
     )
   }
 
-  if (!agent) {
-    return <div>Loading...</div>
-  }
-
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/chat")}
-            className="text-mcs-gray-light hover:text-white"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <div className="flex flex-col h-[calc(100vh-8rem)] relative">
+      {/* Background decoration */}
+      <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-mcs-gray flex items-center justify-center">
-              <span className="text-lg font-bold text-mcs-blue">{agent.name.charAt(0)}</span>
-            </div>
-            <div>
-              <h1 className="font-bold text-xl">{agent.name}</h1>
-              <p className="text-sm text-mcs-blue">{agent.specialty}</p>
+      {/* Header */}
+      <div className="glass border-b border-white/10 p-4 mb-4 rounded-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/")}
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl overflow-hidden border-2 border-mcs-blue/30">
+                  <Image src={agent.avatar || "/placeholder.svg"} alt={agent.name} fill className="object-cover" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full status-online border-2 border-black"></div>
+              </div>
+              <div>
+                <h1 className="font-bold text-xl text-white">{agent.name}</h1>
+                <p className="text-sm text-mcs-blue">{agent.specialty}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <Button variant="ghost" size="sm" onClick={clearChatHistory} className="text-mcs-gray-light hover:text-white">
-          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearChatHistory}
+            className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+          >
+            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+          </Button>
+        </div>
       </div>
 
       {error && (
-        <Alert className="mb-4 border-red-500 bg-red-500/10">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-          <AlertDescription>{error}</AlertDescription>
+        <Alert className="mb-4 border-red-500/50 bg-red-500/10 rounded-xl">
+          <AlertCircle className="h-4 w-4 text-red-400" />
+          <AlertDescription className="text-red-400">{error}</AlertDescription>
         </Alert>
       )}
 
-      <div className="flex-1 overflow-y-auto mb-4 pr-2 space-y-4">
-        {isLoadingChat ? (
-          <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-mcs-blue"></div>
-          </div>
-        ) : (
-          <>
-            {messages.map((message) => (
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto mb-4 pr-2 space-y-6">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex gap-4 chat-bubble-animation ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+          >
+            <div className="flex-shrink-0">
               <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} chat-bubble-animation`}
+                className={`h-8 w-8 rounded-xl flex items-center justify-center ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-mcs-blue to-mcs-blue-light"
+                    : "bg-gradient-to-r from-gray-600 to-gray-500"
+                }`}
               >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === "user" ? "bg-mcs-blue text-white" : "bg-mcs-gray text-white"
-                  }`}
-                  style={{ overflowWrap: "break-word" }}
-                >
-                  <MarkdownMessage content={message.content} />
-                  <div className="text-xs opacity-70 mt-2">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </div>
+                {message.role === "user" ? (
+                  <User className="h-4 w-4 text-white" />
+                ) : (
+                  <Bot className="h-4 w-4 text-white" />
+                )}
               </div>
-            ))}
+            </div>
 
-            {currentStreamingMessage && (
-              <div className="flex justify-start chat-bubble-animation">
-                <div
-                  className="max-w-[80%] rounded-lg p-4 bg-mcs-gray text-white"
-                  style={{ overflowWrap: "break-word" }}
-                >
-                  <MarkdownMessage content={currentStreamingMessage} />
-                  <div className="text-xs opacity-70 mt-2">
-                    {new Date().toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
+            <div className={`max-w-[80%] ${message.role === "user" ? "text-right" : "text-left"}`}>
+              <div
+                className={`glass-card p-4 rounded-2xl ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 border-mcs-blue/30"
+                    : "border-white/10"
+                }`}
+              >
+                <div className="whitespace-pre-wrap text-white leading-relaxed">{message.content}</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2 px-2">
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {currentStreamingMessage && (
+          <div className="flex gap-4 chat-bubble-animation">
+            <div className="flex-shrink-0">
+              <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-r from-gray-600 to-gray-500">
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+            </div>
+
+            <div className="max-w-[80%]">
+              <div className="glass-card p-4 rounded-2xl border-white/10">
+                <div className="whitespace-pre-wrap text-white leading-relaxed">{currentStreamingMessage}</div>
+                <div className="flex items-center gap-1 mt-2">
+                  <div className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"></div>
+                  <div
+                    className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
                 </div>
               </div>
-            )}
-          </>
+              <div className="text-xs text-gray-500 mt-2 px-2">
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          </div>
         )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="resize-none bg-mcs-gray border-mcs-gray focus-visible:ring-mcs-blue"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              handleSubmit(e)
-            }
-          }}
-        />
-        <Button
-          type="submit"
-          disabled={isLoading || !input.trim() || isLoadingChat}
-          className="bg-mcs-blue hover:bg-mcs-blue-light text-white"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="glass p-4 rounded-xl border border-white/10">
+        <div className="flex gap-3">
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
+            rows={1}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSubmit(e)
+              }
+            }}
+          />
+          <Button type="submit" disabled={isLoading || !input.trim()} className="btn-primary rounded-xl px-6 shrink-0">
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </Button>
+        </div>
       </form>
     </div>
   )
