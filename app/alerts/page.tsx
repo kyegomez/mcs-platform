@@ -6,77 +6,41 @@ import { agents } from "@/data/agents"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Bell, Check, AlertTriangle, AlertCircle } from "lucide-react"
+import { Bell, Check, AlertTriangle, AlertCircle, FileText } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
-// Sample alerts data
-const sampleAlerts: Alert[] = [
-  {
-    id: "1",
-    title: "Medication Reminder",
-    description: "Remember to take your blood pressure medication today.",
-    severity: "medium",
-    read: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    agentId: "cardio-specialist",
-  },
-  {
-    id: "2",
-    title: "Appointment Scheduled",
-    description: "Your virtual follow-up with Dr. Neuro is scheduled for tomorrow at 10:00 AM.",
-    severity: "low",
-    read: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    agentId: "neuro-specialist",
-  },
-  {
-    id: "3",
-    title: "Abnormal Heart Rate Detected",
-    description:
-      "Your smartwatch recorded an elevated heart rate during rest. Consider discussing this with your healthcare provider.",
-    severity: "high",
-    read: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    agentId: "cardio-specialist",
-  },
-  {
-    id: "4",
-    title: "Nutrition Plan Update",
-    description:
-      "Based on your recent notes, I've updated your nutrition recommendations. Check your chat for details.",
-    severity: "medium",
-    read: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    agentId: "nutrition-specialist",
-  },
-  {
-    id: "5",
-    title: "Sleep Pattern Analysis",
-    description:
-      "Your sleep data shows irregular patterns. I've prepared some recommendations to improve your sleep quality.",
-    severity: "medium",
-    read: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 days ago
-    agentId: "mental-specialist",
-  },
-]
+import { getTriggeredAlerts, dismissAlert } from "@/lib/alert-system"
+import { useRouter } from "next/navigation"
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all")
+  const router = useRouter()
 
   useEffect(() => {
-    // In a real app, fetch alerts from an API
-    // For now, use sample data
-    setAlerts(sampleAlerts)
+    // Load triggered alerts from the alert system
+    const triggeredAlerts = getTriggeredAlerts()
+    setAlerts(triggeredAlerts)
+
+    // Set up interval to check for new alerts
+    const interval = setInterval(() => {
+      setAlerts(getTriggeredAlerts())
+    }, 60000) // Check every minute
+
+    return () => clearInterval(interval)
   }, [])
 
   const markAsRead = (id: string) => {
+    dismissAlert(id)
     setAlerts(alerts.map((alert) => (alert.id === id ? { ...alert, read: true } : alert)))
   }
 
   const markAllAsRead = () => {
+    alerts.forEach((alert) => {
+      if (!alert.read) {
+        dismissAlert(alert.id)
+      }
+    })
     setAlerts(alerts.map((alert) => ({ ...alert, read: true })))
   }
 
@@ -110,6 +74,13 @@ export default function AlertsPage() {
       case "low":
         return <Badge className="bg-mcs-blue/20 text-mcs-blue hover:bg-mcs-blue/30 border-mcs-blue/50">Low</Badge>
     }
+  }
+
+  const handleViewNote = (noteId: string) => {
+    // Store the note ID to view in localStorage
+    localStorage.setItem("mcs-view-note-id", noteId)
+    // Navigate to notes page
+    router.push("/notes")
   }
 
   return (
@@ -207,24 +178,39 @@ export default function AlertsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-mcs-gray-light mb-4">{alert.description}</p>
-                  {agent && (
-                    <Link href={`/chat/${agent.id}`}>
-                      <div className="flex items-center gap-3 p-3 rounded-md bg-mcs-gray/30 hover:bg-mcs-gray/50 transition-colors">
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden">
-                          <Image
-                            src={agent.avatar || "/placeholder.svg"}
-                            alt={agent.name}
-                            fill
-                            className="object-cover"
-                          />
+
+                  <div className="flex flex-wrap gap-3">
+                    {alert.noteId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewNote(alert.noteId!)}
+                        className="flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View Note
+                      </Button>
+                    )}
+
+                    {agent && (
+                      <Link href={`/chat/${agent.id}`}>
+                        <div className="flex items-center gap-3 p-3 rounded-md bg-mcs-gray/30 hover:bg-mcs-gray/50 transition-colors">
+                          <div className="relative h-8 w-8 rounded-full overflow-hidden">
+                            <Image
+                              src={agent.avatar || "/placeholder.svg"}
+                              alt={agent.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{agent.name}</p>
+                            <p className="text-xs text-mcs-blue">{agent.specialty}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{agent.name}</p>
-                          <p className="text-xs text-mcs-blue">{agent.specialty}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
+                      </Link>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )

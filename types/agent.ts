@@ -45,4 +45,5 @@ export interface Alert {
   read: boolean
   createdAt: Date
   agentId: string
+  noteId?: string // Optional reference to a note
 }

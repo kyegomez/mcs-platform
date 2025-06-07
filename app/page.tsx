@@ -9,6 +9,7 @@ import { DashboardMetrics } from "@/components/dashboard-metrics"
 import { AgentSearch } from "@/components/agent-search"
 import { Pagination } from "@/components/pagination"
 import { Sparkles, ArrowRight, Zap } from "lucide-react"
+import { AlertManager } from "@/components/alert-manager"
 
 export default function GalleryPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -72,6 +73,15 @@ export default function GalleryPage() {
       </div>
 
       <DashboardMetrics />
+
+      {/* Health Alerts */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Health Reminders</h2>
+          <p className="text-gray-400">Automated alerts to help you track your health consistently.</p>
+        </div>
+        <AlertManager />
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

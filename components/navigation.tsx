@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Grid3x3, MessageSquare, FileText, Bell, Menu, X, Activity } from "lucide-react"
+import { Grid3x3, MessageSquare, FileText, Bell, Menu, X, Activity, Calendar, Clock } from "lucide-react"
 import { useState } from "react"
 
 const Navigation = () => {
@@ -25,6 +25,16 @@ const Navigation = () => {
       name: "Notes",
       path: "/notes",
       icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      name: "Calendar",
+      path: "/calendar",
+      icon: <Calendar className="h-5 w-5" />,
+    },
+    {
+      name: "Reminders",
+      path: "/reminders",
+      icon: <Clock className="h-5 w-5" />,
     },
     {
       name: "Alerts",

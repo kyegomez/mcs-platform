@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Search, Filter, Grid, List, SortAsc, SortDesc, Pin, Tag, X } from "lucide-react"
+import { Plus, Search, Filter, Grid, List, SortAsc, SortDesc, Pin, Tag, X, Calendar } from "lucide-react"
 import { NoteCard } from "@/components/note-card"
 import { FileUpload, FilePreview } from "@/components/file-upload"
 import { deleteFile } from "@/lib/supabase"
+import Link from "next/link"
 
 const categories = [
   "Symptoms",
@@ -86,6 +87,51 @@ export default function NotesPage() {
     if (notes.length >= 0) {
       localStorage.setItem("mcs-notes", JSON.stringify(notes))
       window.dispatchEvent(new Event("notesUpdated"))
+    }
+  }, [notes])
+
+  // Handle pre-filled note from alerts
+  useEffect(() => {
+    const pendingNote = localStorage.getItem("mcs-pending-note")
+    if (pendingNote) {
+      try {
+        const noteData = JSON.parse(pendingNote)
+        setTitle(noteData.title || "")
+        setContent(noteData.content || "")
+        setCategory(noteData.category || "General")
+        setIsDialogOpen(true)
+        localStorage.removeItem("mcs-pending-note")
+      } catch (error) {
+        console.error("Error loading pending note:", error)
+      }
+    }
+
+    // Check if we need to view a specific note
+    const viewNoteId = localStorage.getItem("mcs-view-note-id")
+    if (viewNoteId) {
+      localStorage.removeItem("mcs-view-note-id")
+
+      // Wait for notes to load
+      setTimeout(() => {
+        const noteToView = notes.find((note) => note.id === viewNoteId)
+        if (noteToView) {
+          handleEdit(noteToView)
+        }
+      }, 500)
+    }
+
+    // Check if we need to edit a specific note
+    const editNoteId = localStorage.getItem("mcs-edit-note-id")
+    if (editNoteId) {
+      localStorage.removeItem("mcs-edit-note-id")
+
+      // Wait for notes to load
+      setTimeout(() => {
+        const noteToEdit = notes.find((note) => note.id === editNoteId)
+        if (noteToEdit) {
+          handleEdit(noteToEdit)
+        }
+      }, 500)
     }
   }, [notes])
 
@@ -245,129 +291,138 @@ export default function NotesPage() {
             <p className="text-gray-400">Document your health journey with notes, files, and insights.</p>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="btn-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                New Note
+          <div className="flex items-center gap-2">
+            <Link href="/calendar">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendar View
               </Button>
-            </DialogTrigger>
-            <DialogContent className="glass-card max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-white">{editingNote ? "Edit Note" : "Create New Note"}</DialogTitle>
-              </DialogHeader>
+            </Link>
 
-              <div className="space-y-6 pt-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Title</label>
-                  <Input
-                    placeholder="Enter note title..."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white"
-                  />
-                </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm} className="btn-primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Note
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-card max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-white">{editingNote ? "Edit Note" : "Create New Note"}</DialogTitle>
+                </DialogHeader>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6 pt-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Category</label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Color</label>
-                    <div className="flex gap-2">
-                      {colors.map((colorOption) => (
-                        <button
-                          key={colorOption.value}
-                          onClick={() => setColor(colorOption.value)}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${
-                            color === colorOption.value ? "border-white scale-110" : "border-gray-600"
-                          }`}
-                          style={{
-                            backgroundColor: {
-                              blue: "#3b82f6",
-                              green: "#10b981",
-                              yellow: "#f59e0b",
-                              red: "#ef4444",
-                              purple: "#8b5cf6",
-                              pink: "#ec4899",
-                              gray: "#6b7280",
-                            }[colorOption.value],
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Content</label>
-                  <Textarea
-                    placeholder="Write your note content..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={6}
-                    className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Tags</label>
-                  <div className="flex gap-2">
+                    <label className="text-sm font-medium text-gray-300">Title</label>
                     <Input
-                      placeholder="Add a tag..."
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      placeholder="Enter note title..."
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
                       className="bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white"
                     />
-                    <Button type="button" onClick={addTag} variant="outline" className="shrink-0">
-                      Add
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300">Category</label>
+                      <Select value={category} onValueChange={setCategory}>
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300">Color</label>
+                      <div className="flex gap-2">
+                        {colors.map((colorOption) => (
+                          <button
+                            key={colorOption.value}
+                            onClick={() => setColor(colorOption.value)}
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${
+                              color === colorOption.value ? "border-white scale-110" : "border-gray-600"
+                            }`}
+                            style={{
+                              backgroundColor: {
+                                blue: "#3b82f6",
+                                green: "#10b981",
+                                yellow: "#f59e0b",
+                                red: "#ef4444",
+                                purple: "#8b5cf6",
+                                pink: "#ec4899",
+                                gray: "#6b7280",
+                              }[colorOption.value],
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Content</label>
+                    <Textarea
+                      placeholder="Write your note content..."
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      rows={6}
+                      className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Tags</label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a tag..."
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                        className="bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white"
+                      />
+                      <Button type="button" onClick={addTag} variant="outline" className="shrink-0">
+                        Add
+                      </Button>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-gray-300 border-gray-600">
+                            {tag}
+                            <button onClick={() => removeTag(tag)} className="ml-1 hover:text-red-400">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Attachments</label>
+                    <FileUpload onFilesUploaded={handleFilesUploaded} />
+                    <FilePreview files={attachments} onRemove={removeAttachment} />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSubmit} disabled={!title.trim()} className="btn-primary">
+                      {editingNote ? "Update Note" : "Create Note"}
                     </Button>
                   </div>
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-gray-300 border-gray-600">
-                          {tag}
-                          <button onClick={() => removeTag(tag)} className="ml-1 hover:text-red-400">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Attachments</label>
-                  <FileUpload onFilesUploaded={handleFilesUploaded} />
-                  <FilePreview files={attachments} onRemove={removeAttachment} />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={!title.trim()} className="btn-primary">
-                    {editingNote ? "Update Note" : "Create Note"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Filters and Search */}
@@ -393,7 +448,7 @@ export default function NotesPage() {
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all_categories">All Categories</SelectItem>
+                    <SelectItem value="Symptoms">All Categories</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
