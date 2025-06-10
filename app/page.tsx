@@ -7,7 +7,8 @@ import { agents } from "@/data/agents"
 import { AgentIcon } from "@/components/agent-icon"
 import { getChatAgentIds, getChatHistory } from "@/lib/chat-storage"
 import Link from "next/link"
-import { MessageSquare, FileText, ArrowRight } from "lucide-react"
+import { FileText, ArrowRight, MessageSquare } from "lucide-react"
+import Head from "next/head"
 
 interface RecentActivity {
   agentId: string
@@ -92,123 +93,142 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-4">
-      {/* Simple Header */}
-      <div className="text-center pt-8 pb-4">
-        <h1 className="text-4xl font-light text-white mb-2">Health</h1>
-        <p className="text-gray-400 text-lg font-light">Your personal healthcare assistant</p>
-      </div>
+    <>
+      <Head>
+        <title>MCS - Modern Care System | AI Healthcare Dashboard</title>
+        <meta
+          name="description"
+          content="Access your AI-powered healthcare dashboard. Chat with medical specialists, track health notes, and manage your wellness journey with MCS."
+        />
+        <meta
+          name="keywords"
+          content="healthcare dashboard, AI medical advice, health tracking, medical specialists, digital health platform"
+        />
+        <link rel="canonical" href="https://mcs-health.vercel.app/" />
+      </Head>
 
-      {/* Main Actions - Apple-style large buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link href="/chat">
-          <Card className="group cursor-pointer border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/20 hover:to-mcs-blue/10 transition-all duration-300">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare className="w-8 h-8 text-mcs-blue" />
-              </div>
-              <h3 className="text-xl font-medium text-white mb-2">Talk to a Specialist</h3>
-              <p className="text-gray-400 font-light">Get instant medical advice from AI specialists</p>
-            </CardContent>
-          </Card>
-        </Link>
+      <div className="max-w-4xl mx-auto space-y-8 px-4">
+        {/* Simple Header */}
+        <header className="text-center pt-8 pb-4">
+          <h1 className="text-4xl font-light text-white mb-2">Health</h1>
+          <p className="text-gray-400 text-lg font-light">Your personal healthcare assistant</p>
+        </header>
 
-        <Link href="/notes">
-          <Card className="group cursor-pointer border-0 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 transition-all duration-300">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <FileText className="w-8 h-8 text-green-400" />
-              </div>
-              <h3 className="text-xl font-medium text-white mb-2">Health Journal</h3>
-              <p className="text-gray-400 font-light">
-                {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey"}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+        {/* Main Actions - Apple-style large buttons */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Main Actions">
+          <Link href="/chat" aria-label="Start consultation with AI medical specialists">
+            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/20 hover:to-mcs-blue/10 transition-all duration-300">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <MessageSquare className="w-8 h-8 text-mcs-blue" />
+                </div>
+                <h2 className="text-xl font-medium text-white mb-2">Talk to a Specialist</h2>
+                <p className="text-gray-400 font-light">Get instant medical advice from AI specialists</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-      {/* Recent Conversations - Only show if there are any */}
-      {recentActivity.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium text-white">Recent</h2>
-            <Link href="/chat">
-              <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
-                View All
-              </Button>
-            </Link>
-          </div>
+          <Link href="/notes" aria-label="Access your health journal and notes">
+            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 transition-all duration-300">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="w-8 h-8 text-green-400" />
+                </div>
+                <h2 className="text-xl font-medium text-white mb-2">Health Journal</h2>
+                <p className="text-gray-400 font-light">
+                  {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey"}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </section>
 
-          <div className="space-y-3">
-            {recentActivity.map((activity) => (
-              <Link key={activity.agentId} href={`/chat/${activity.agentId}`}>
+        {/* Recent Conversations - Only show if there are any */}
+        {recentActivity.length > 0 && (
+          <section className="space-y-4" aria-label="Recent Activity">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-medium text-white">Recent</h2>
+              <Link href="/chat">
+                <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
+                  View All
+                </Button>
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {recentActivity.map((activity) => (
+                <Link key={activity.agentId} href={`/chat/${activity.agentId}`}>
+                  <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          style={{
+                            backgroundColor: activity.iconColor + "20",
+                          }}
+                        >
+                          <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white group-hover:text-mcs-blue transition-colors">
+                            {activity.agentName}
+                          </p>
+                          <p className="text-sm text-gray-400 font-light">{activity.specialty}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm text-gray-500 font-light">
+                            {formatTimeAgo(activity.lastMessageTime)}
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Featured Specialists - Simplified grid */}
+        <section className="space-y-4" aria-label="Medical Specialists">
+          <h2 className="text-xl font-medium text-white">Specialists</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {agents.slice(0, 8).map((agent) => (
+              <Link
+                key={agent.id}
+                href={`/chat/${agent.id}`}
+                aria-label={`Chat with ${agent.name}, ${agent.specialty}`}
+              >
                 <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{
-                          backgroundColor: activity.iconColor + "20",
-                        }}
-                      >
-                        <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white group-hover:text-mcs-blue transition-colors">
-                          {activity.agentName}
-                        </p>
-                        <p className="text-sm text-gray-400 font-light">{activity.specialty}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm text-gray-500 font-light">
-                          {formatTimeAgo(activity.lastMessageTime)}
-                        </span>
-                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1" />
-                      </div>
+                  <CardContent className="p-4 text-center">
+                    <div
+                      className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                      style={{
+                        backgroundColor: agent.iconColor + "20",
+                      }}
+                    >
+                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="md" />
                     </div>
+                    <h3 className="font-medium text-white text-sm mb-1 group-hover:text-mcs-blue transition-colors">
+                      {agent.name}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-light">{agent.specialty}</p>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Featured Specialists - Simplified grid */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-medium text-white">Specialists</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {agents.slice(0, 8).map((agent) => (
-            <Link key={agent.id} href={`/chat/${agent.id}`}>
-              <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
-                <CardContent className="p-4 text-center">
-                  <div
-                    className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                    style={{
-                      backgroundColor: agent.iconColor + "20",
-                    }}
-                  >
-                    <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="md" />
-                  </div>
-                  <h3 className="font-medium text-white text-sm mb-1 group-hover:text-mcs-blue transition-colors">
-                    {agent.name}
-                  </h3>
-                  <p className="text-xs text-gray-400 font-light">{agent.specialty}</p>
-                </CardContent>
-              </Card>
+          <div className="text-center pt-4">
+            <Link href="/chat">
+              <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
+                View All Specialists
+              </Button>
             </Link>
-          ))}
-        </div>
-
-        <div className="text-center pt-4">
-          <Link href="/chat">
-            <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
-              View All Specialists
-            </Button>
-          </Link>
-        </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </>
   )
 }
