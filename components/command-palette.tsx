@@ -6,21 +6,18 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { agents } from "@/data/agents"
-import { AgentIcon } from "@/components/agent-icon"
-import { Search, Home, MessageSquare, FileText, User, Plus, ArrowRight, Command, Hash, Clock, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Activity, MessageSquare, FileText, User, Search, ArrowRight, CommandIcon, Stethoscope } from "lucide-react"
+import { agents } from "@/data/agents"
 
-interface CommandItem {
+interface CommandType {
   id: string
   title: string
   subtitle?: string
   icon: React.ReactNode
   action: () => void
-  category: "Navigation" | "Actions" | "Specialists" | "Recent"
+  category: string
   keywords: string[]
-  badge?: string
 }
 
 interface CommandPaletteProps {
@@ -33,102 +30,71 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const router = useRouter()
 
-  // Reset state when dialog opens/closes
-  useEffect(() => {
-    if (open) {
-      setSearch("")
-      setSelectedIndex(0)
-    }
-  }, [open])
-
-  const navigateAndClose = useCallback(
-    (path: string) => {
-      router.push(path)
-      onOpenChange(false)
-    },
-    [router, onOpenChange],
-  )
-
-  const createNote = useCallback(() => {
-    localStorage.setItem("mcs-create-note", "true")
-    navigateAndClose("/notes")
-  }, [navigateAndClose])
-
-  const commands: CommandItem[] = useMemo(
+  const commands: CommandType[] = useMemo(
     () => [
       // Navigation
       {
         id: "nav-dashboard",
-        title: "Dashboard",
-        subtitle: "Go to main dashboard",
-        icon: <Home className="w-4 h-4" />,
-        action: () => navigateAndClose("/"),
+        title: "Go to Dashboard",
+        subtitle: "View your health overview",
+        icon: <Activity className="h-4 w-4" />,
+        action: () => router.push("/"),
         category: "Navigation",
-        keywords: ["dashboard", "home", "main", "overview"],
+        keywords: ["dashboard", "home", "overview", "health"],
       },
       {
         id: "nav-chat",
-        title: "Chat",
-        subtitle: "Talk to specialists",
-        icon: <MessageSquare className="w-4 h-4" />,
-        action: () => navigateAndClose("/chat"),
+        title: "Go to Chat",
+        subtitle: "Talk with AI specialists",
+        icon: <MessageSquare className="h-4 w-4" />,
+        action: () => router.push("/chat"),
         category: "Navigation",
-        keywords: ["chat", "talk", "specialists", "doctors", "consultation"],
+        keywords: ["chat", "talk", "specialists", "ai"],
       },
       {
         id: "nav-notes",
-        title: "Notes",
-        subtitle: "Health journal",
-        icon: <FileText className="w-4 h-4" />,
-        action: () => navigateAndClose("/notes"),
+        title: "Go to Notes",
+        subtitle: "View your health notes",
+        icon: <FileText className="h-4 w-4" />,
+        action: () => router.push("/notes"),
         category: "Navigation",
-        keywords: ["notes", "journal", "health", "tracking", "diary"],
+        keywords: ["notes", "journal", "health", "records"],
       },
       {
         id: "nav-account",
-        title: "Account",
-        subtitle: "Profile and settings",
-        icon: <User className="w-4 h-4" />,
-        action: () => navigateAndClose("/account"),
+        title: "Go to Account",
+        subtitle: "Manage your profile and settings",
+        icon: <User className="h-4 w-4" />,
+        action: () => router.push("/account"),
         category: "Navigation",
         keywords: ["account", "profile", "settings", "preferences"],
       },
-
       // Quick Actions
       {
         id: "action-new-note",
-        title: "New Note",
-        subtitle: "Create a health note",
-        icon: <Plus className="w-4 h-4" />,
-        action: createNote,
-        category: "Actions",
-        keywords: ["new", "create", "note", "add", "write"],
-        badge: "⌘N",
+        title: "Create New Note",
+        subtitle: "Start writing a health note",
+        icon: <FileText className="h-4 w-4" />,
+        action: () => router.push("/notes?new=true"),
+        category: "Quick Actions",
+        keywords: ["new", "create", "note", "write", "journal"],
       },
-
-      // Specialists
-      ...agents.slice(0, 8).map((agent) => ({
-        id: `specialist-${agent.id}`,
+      // AI Specialists
+      ...agents.map((agent) => ({
+        id: `agent-${agent.id}`,
         title: `Chat with ${agent.name}`,
-        subtitle: agent.specialty,
-        icon: <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />,
-        action: () => navigateAndClose(`/chat/${agent.id}`),
-        category: "Specialists" as const,
-        keywords: [
-          agent.name.toLowerCase(),
-          agent.specialty.toLowerCase(),
-          "chat",
-          "talk",
-          "consult",
-          ...agent.description.toLowerCase().split(" "),
-        ],
+        subtitle: agent.description,
+        icon: <Stethoscope className="h-4 w-4" />,
+        action: () => router.push(`/chat/${agent.id}`),
+        category: "AI Specialists",
+        keywords: [agent.name.toLowerCase(), agent.specialty.toLowerCase(), "chat", "talk", "consult"],
       })),
     ],
-    [navigateAndClose, createNote],
+    [router],
   )
 
   const filteredCommands = useMemo(() => {
-    if (!search.trim()) return commands
+    if (!search) return commands
 
     const searchLower = search.toLowerCase()
     return commands.filter(
@@ -140,7 +106,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }, [commands, search])
 
   const groupedCommands = useMemo(() => {
-    const groups: Record<string, CommandItem[]> = {}
+    const groups: Record<string, CommandType[]> = {}
     filteredCommands.forEach((command) => {
       if (!groups[command.category]) {
         groups[command.category] = []
@@ -150,174 +116,119 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     return groups
   }, [filteredCommands])
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault()
-          setSelectedIndex((prev) => (prev + 1) % filteredCommands.length)
-          break
-        case "ArrowUp":
-          e.preventDefault()
-          setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length)
-          break
-        case "Enter":
-          e.preventDefault()
-          if (filteredCommands[selectedIndex]) {
-            filteredCommands[selectedIndex].action()
-          }
-          break
-        case "Escape":
-          e.preventDefault()
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault()
+        setSelectedIndex((prev) => Math.min(prev + 1, filteredCommands.length - 1))
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        setSelectedIndex((prev) => Math.max(prev - 1, 0))
+      } else if (e.key === "Enter") {
+        e.preventDefault()
+        const selectedCommand = filteredCommands[selectedIndex]
+        if (selectedCommand) {
+          selectedCommand.action()
           onOpenChange(false)
-          break
+          setSearch("")
+          setSelectedIndex(0)
+        }
+      } else if (e.key === "Escape") {
+        onOpenChange(false)
+        setSearch("")
+        setSelectedIndex(0)
       }
+    },
+    [filteredCommands, selectedIndex, onOpenChange],
+  )
+
+  useEffect(() => {
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown)
+      return () => document.removeEventListener("keydown", handleKeyDown)
     }
+  }, [open, handleKeyDown])
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [open, filteredCommands, selectedIndex, onOpenChange])
-
-  // Reset selected index when filtered commands change
   useEffect(() => {
     setSelectedIndex(0)
-  }, [filteredCommands])
+  }, [search])
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "Navigation":
-        return <Hash className="w-3 h-3" />
-      case "Actions":
-        return <Star className="w-3 h-3" />
-      case "Specialists":
-        return <MessageSquare className="w-3 h-3" />
-      case "Recent":
-        return <Clock className="w-3 h-3" />
-      default:
-        return <Search className="w-3 h-3" />
-    }
+  const handleCommandClick = (command: CommandType) => {
+    command.action()
+    onOpenChange(false)
+    setSearch("")
+    setSelectedIndex(0)
   }
-
-  let currentIndex = 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 max-w-2xl bg-black/95 backdrop-blur-xl border border-white/10 shadow-2xl">
-        <div className="flex flex-col max-h-[80vh]">
-          {/* Search Input */}
-          <div className="flex items-center gap-3 p-4 border-b border-white/10">
-            <Search className="w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search for commands, specialists, or actions..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border-0 bg-transparent text-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
-              autoFocus
-            />
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Command className="w-3 h-3" />
-              <span>K</span>
+      <DialogContent className="p-0 max-w-2xl bg-black/95 backdrop-blur-xl border border-white/10">
+        <div className="flex items-center px-4 py-3 border-b border-white/10">
+          <Search className="h-4 w-4 text-gray-400 mr-3" />
+          <Input
+            placeholder="Search commands..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-0 bg-transparent text-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+            autoFocus
+          />
+          <div className="flex items-center gap-1 text-xs text-gray-400 ml-3">
+            <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">↑↓</kbd>
+            <span>navigate</span>
+            <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs ml-2">↵</kbd>
+            <span>select</span>
+          </div>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto">
+          {Object.entries(groupedCommands).map(([category, commands]) => (
+            <div key={category} className="p-2">
+              <div className="px-2 py-1 text-xs font-medium text-gray-400 uppercase tracking-wider">{category}</div>
+              {commands.map((command, index) => {
+                const globalIndex = filteredCommands.indexOf(command)
+                return (
+                  <button
+                    key={command.id}
+                    onClick={() => handleCommandClick(command)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200",
+                      globalIndex === selectedIndex
+                        ? "bg-mcs-blue/20 text-mcs-blue"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white",
+                    )}
+                  >
+                    <div className="flex-shrink-0">{command.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{command.title}</div>
+                      {command.subtitle && <div className="text-xs text-gray-400 truncate">{command.subtitle}</div>}
+                    </div>
+                    <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+
+          {filteredCommands.length === 0 && (
+            <div className="p-8 text-center text-gray-400">
+              <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No commands found</p>
+              <p className="text-xs mt-1">Try searching for "chat", "notes", or "dashboard"</p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-4 py-2 border-t border-white/10 text-xs text-gray-400 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <CommandIcon className="h-3 w-3" />
+              <span>+</span>
+              <kbd className="px-1 py-0.5 bg-white/10 rounded">K</kbd>
+              <span>to open</span>
             </div>
           </div>
-
-          {/* Commands List */}
-          <div className="flex-1 overflow-y-auto p-2">
-            {Object.keys(groupedCommands).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Search className="w-8 h-8 text-gray-500 mb-3" />
-                <p className="text-gray-400 font-light">No results found</p>
-                <p className="text-gray-500 text-sm font-light">Try searching for something else</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(groupedCommands).map(([category, items]) => (
-                  <div key={category}>
-                    <div className="flex items-center gap-2 px-3 py-1 mb-2">
-                      {getCategoryIcon(category)}
-                      <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{category}</span>
-                    </div>
-                    <div className="space-y-1">
-                      {items.map((command) => {
-                        const isSelected = currentIndex === selectedIndex
-                        const itemIndex = currentIndex++
-                        return (
-                          <button
-                            key={command.id}
-                            onClick={command.action}
-                            onMouseEnter={() => setSelectedIndex(itemIndex)}
-                            className={cn(
-                              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150",
-                              isSelected
-                                ? "bg-mcs-blue/20 border border-mcs-blue/30"
-                                : "hover:bg-white/5 border border-transparent",
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                                isSelected ? "bg-mcs-blue/30" : "bg-white/10",
-                              )}
-                            >
-                              {command.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={cn("font-medium text-sm", isSelected ? "text-white" : "text-gray-200")}
-                                >
-                                  {command.title}
-                                </span>
-                                {command.badge && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs border-gray-600 text-gray-400 bg-gray-800/50"
-                                  >
-                                    {command.badge}
-                                  </Badge>
-                                )}
-                              </div>
-                              {command.subtitle && (
-                                <p className="text-xs text-gray-400 font-light mt-0.5">{command.subtitle}</p>
-                              )}
-                            </div>
-                            <ArrowRight
-                              className={cn(
-                                "w-3 h-3 transition-colors",
-                                isSelected ? "text-mcs-blue" : "text-gray-500",
-                              )}
-                            />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs">↑↓</kbd>
-                <span>Navigate</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs">↵</kbd>
-                <span>Select</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs">esc</kbd>
-                <span>Close</span>
-              </div>
-            </div>
-            <div className="text-xs text-gray-500">
-              {filteredCommands.length} {filteredCommands.length === 1 ? "result" : "results"}
-            </div>
+          <div className="text-xs">
+            {filteredCommands.length} command{filteredCommands.length !== 1 ? "s" : ""}
           </div>
         </div>
       </DialogContent>

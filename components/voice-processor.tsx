@@ -67,8 +67,14 @@ export function VoiceProcessor({
   const [isSupported, setIsSupported] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [speechEnabled, setSpeechEnabled] = useState(true)
+  const [audioLevel, setAudioLevel] = useState(0)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const microphoneRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const animationRef = useRef<number>()
 
   useEffect(() => {
     // Check if speech recognition is supported
@@ -86,6 +92,7 @@ export function VoiceProcessor({
 
       recognition.onstart = () => {
         console.log("Speech recognition started")
+        startAudioVisualization()
       }
 
       recognition.onresult = (event) => {
@@ -101,16 +108,19 @@ export function VoiceProcessor({
         if (finalTranscript) {
           onTranscript(finalTranscript)
           setIsListening(false)
+          stopAudioVisualization()
         }
       }
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error)
         setIsListening(false)
+        stopAudioVisualization()
       }
 
       recognition.onend = () => {
         setIsListening(false)
+        stopAudioVisualization()
       }
 
       recognitionRef.current = recognition
@@ -123,8 +133,60 @@ export function VoiceProcessor({
       if (synthRef.current) {
         synthRef.current.cancel()
       }
+      stopAudioVisualization()
     }
   }, [onTranscript, setIsListening])
+
+  const startAudioVisualization = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioContextRef.current = audioContext
+
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyserRef.current = analyser
+
+      const microphone = audioContext.createMediaStreamSource(stream)
+      microphoneRef.current = microphone
+      microphone.connect(analyser)
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
+
+      const updateAudioLevel = () => {
+        if (analyserRef.current && isListening) {
+          analyserRef.current.getByteFrequencyData(dataArray)
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length
+          setAudioLevel(Math.min(average / 128, 1))
+          animationRef.current = requestAnimationFrame(updateAudioLevel)
+        }
+      }
+
+      updateAudioLevel()
+    } catch (error) {
+      console.error("Error accessing microphone:", error)
+    }
+  }
+
+  const stopAudioVisualization = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+
+    setAudioLevel(0)
+  }
 
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
@@ -141,6 +203,7 @@ export function VoiceProcessor({
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop()
       setIsListening(false)
+      stopAudioVisualization()
     }
   }
 
@@ -190,12 +253,12 @@ export function VoiceProcessor({
     }
   }
 
-  // Expose the speak function to parent component - fix infinite loop
+  // Expose the speak function to parent component
   useEffect(() => {
     if (onSpeakResponse) {
       onSpeakResponse(speakText)
     }
-  }, [speechEnabled]) // Remove onSpeakResponse from dependencies to prevent loop
+  }, [speechEnabled])
 
   if (!isSupported) {
     return null
@@ -203,22 +266,74 @@ export function VoiceProcessor({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={isListening ? stopListening : startListening}
-        className={cn(
-          "rounded-xl transition-all duration-200",
-          isListening
-            ? "bg-red-500/20 text-red-400 hover:bg-red-500/30 animate-pulse"
-            : "text-gray-400 hover:text-white hover:bg-white/10",
-        )}
-        disabled={isSpeaking}
-      >
-        {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-      </Button>
+      {/* Voice Input Button with Animation */}
+      <div className="relative">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={isListening ? stopListening : startListening}
+          className={cn(
+            "rounded-xl transition-all duration-300 relative overflow-hidden",
+            isListening
+              ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+              : "text-gray-400 hover:text-white hover:bg-white/10",
+          )}
+          disabled={isSpeaking}
+        >
+          {isListening ? <MicOff className="h-5 w-5 relative z-10" /> : <Mic className="h-5 w-5 relative z-10" />}
 
+          {/* Pulsing Animation */}
+          {isListening && (
+            <>
+              <div
+                className="absolute inset-0 bg-red-500/30 rounded-xl animate-ping"
+                style={{ animationDuration: "1s" }}
+              />
+              <div
+                className="absolute inset-0 bg-red-500/20 rounded-xl animate-pulse"
+                style={{ animationDuration: "2s" }}
+              />
+            </>
+          )}
+
+          {/* Audio Level Visualization */}
+          {isListening && (
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-red-500/40 to-red-400/40 rounded-xl transition-opacity duration-100"
+              style={{
+                opacity: audioLevel * 0.8,
+                transform: `scale(${1 + audioLevel * 0.1})`,
+              }}
+            />
+          )}
+        </Button>
+
+        {/* Recording Indicator */}
+        {isListening && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse">
+            <div className="absolute inset-0 bg-red-500 rounded-full animate-ping" />
+          </div>
+        )}
+      </div>
+
+      {/* Audio Waveform Visualization */}
+      {isListening && (
+        <div className="flex items-center gap-1 ml-2">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="w-1 bg-red-400 rounded-full transition-all duration-150"
+              style={{
+                height: `${8 + audioLevel * 20 * Math.sin(Date.now() / 200 + i)}px`,
+                animationDelay: `${i * 100}ms`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Speech Toggle Button */}
       <Button
         type="button"
         variant="ghost"
@@ -231,7 +346,10 @@ export function VoiceProcessor({
         disabled={isListening}
       >
         {isSpeaking ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
+          <div className="relative">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="absolute inset-0 bg-mcs-blue/20 rounded-full animate-pulse" />
+          </div>
         ) : speechEnabled ? (
           <Volume2 className="h-5 w-5" />
         ) : (
