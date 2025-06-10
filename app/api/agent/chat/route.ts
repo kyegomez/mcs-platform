@@ -15,24 +15,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
     }
 
-    // Log the history being sent to the API
-    console.log("Making request to Swarms API with:", {
-      url: `${SWARMS_API_URL}/v1/agent/completions`,
-      agent_name: agent_config?.agent_name,
-      task_length: task?.length,
-      history_length: history?.length,
-      history_sample: history?.slice(-2), // Log last 2 messages for debugging
-    })
+    // Process and validate history
+    let processedHistory = []
+    if (history && Array.isArray(history)) {
+      processedHistory = history
+        .filter((msg) => msg && msg.content && msg.content.trim() !== "")
+        .map((msg) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: String(msg.content).trim(),
+        }))
+    }
+
+    // Enhanced logging
+    console.log("=== SWARMS API REQUEST ===")
+    console.log("Agent:", agent_config?.agent_name)
+    console.log("Task:", task?.substring(0, 100) + "...")
+    console.log("Raw history length:", history?.length || 0)
+    console.log("Processed history length:", processedHistory.length)
+    console.log("Processed history:", JSON.stringify(processedHistory, null, 2))
 
     const payload = {
-      agent_config,
+      agent_config: {
+        ...agent_config,
+        system_prompt:
+          agent_config.system_prompt +
+          "\n\nIMPORTANT: You have access to the conversation history. Please reference previous messages when relevant and maintain context throughout the conversation.",
+      },
       task,
+      history: processedHistory,
     }
 
-    // If history exists, add it to the payload
-    if (history && history.length > 0) {
-      payload.history = history
-    }
+    console.log("=== SENDING TO SWARMS API ===")
+    console.log("Payload:", JSON.stringify(payload, null, 2))
 
     const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
@@ -50,7 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log("Swarms API response structure:", Object.keys(data))
+    console.log("=== SWARMS API RESPONSE ===")
+    console.log("Response structure:", Object.keys(data))
+    console.log("Full response:", JSON.stringify(data, null, 2))
 
     // Process the response to make it easier to use on the client
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {

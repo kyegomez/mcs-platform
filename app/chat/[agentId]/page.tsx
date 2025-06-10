@@ -93,19 +93,27 @@ export default function ChatPage() {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const currentInput = input
     setInput("")
     setIsLoading(true)
     setCurrentStreamingMessage("")
 
     try {
-      // Get all messages except the welcome message for the API
-      const historyForApi = messages.filter(
-        (msg) => !(msg.role === "assistant" && msg.content.includes(`Hello, I'm ${agent.name}`)),
-      )
+      // Create history array with all previous messages
+      const historyForApi = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }))
+
+      console.log("=== CLIENT SIDE DEBUG ===")
+      console.log("Current messages:", messages.length)
+      console.log("History being sent:", historyForApi)
+      console.log("Current user input:", currentInput)
 
       let fullResponse = ""
 
-      await streamChatWithAgent(agent, input, [...historyForApi, userMessage], (chunk) => {
+      // Pass the history along with the current message
+      await streamChatWithAgent(agent, currentInput, historyForApi, (chunk) => {
         fullResponse += chunk
         setCurrentStreamingMessage(fullResponse)
       })

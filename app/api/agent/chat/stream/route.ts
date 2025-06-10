@@ -10,9 +10,6 @@ export async function POST(request: NextRequest) {
     // Get the API key from environment variables
     const apiKey = process.env.SWARMS_API_KEY
 
-    // Log the API key status (without revealing the key)
-    console.log("API Key status:", apiKey ? "Configured" : "Not configured")
-
     if (!apiKey) {
       console.error("SWARMS_API_KEY environment variable is not configured")
       return new Response(JSON.stringify({ error: "SWARMS_API_KEY is not configured" }), {
@@ -21,24 +18,38 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Log the history being sent to the API
-    console.log("Making request to Swarms API with:", {
-      url: `${SWARMS_API_URL}/v1/agent/completions`,
-      agent_name: agent_config?.agent_name,
-      task_length: task?.length,
-      history_length: history?.length,
-      history_sample: history?.slice(-2), // Log last 2 messages for debugging
-    })
+    // Process and validate history
+    let processedHistory = []
+    if (history && Array.isArray(history)) {
+      processedHistory = history
+        .filter((msg) => msg && msg.content && msg.content.trim() !== "")
+        .map((msg) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: String(msg.content).trim(),
+        }))
+    }
+
+    // Enhanced logging
+    console.log("=== SWARMS STREAMING API REQUEST ===")
+    console.log("Agent:", agent_config?.agent_name)
+    console.log("Task:", task?.substring(0, 100) + "...")
+    console.log("Raw history length:", history?.length || 0)
+    console.log("Processed history length:", processedHistory.length)
+    console.log("Processed history:", JSON.stringify(processedHistory, null, 2))
 
     const payload = {
-      agent_config,
+      agent_config: {
+        ...agent_config,
+        system_prompt:
+          agent_config.system_prompt +
+          "\n\nIMPORTANT: You have access to the conversation history. Please reference previous messages when relevant and maintain context throughout the conversation.",
+      },
       task,
+      history: processedHistory,
     }
 
-    // If history exists, add it to the payload
-    if (history && history.length > 0) {
-      payload.history = history
-    }
+    console.log("=== SENDING TO SWARMS STREAMING API ===")
+    console.log("Payload:", JSON.stringify(payload, null, 2))
 
     const swarmsResponse = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
@@ -59,7 +70,9 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await swarmsResponse.json()
-    console.log("Swarms API response structure:", Object.keys(data))
+    console.log("=== SWARMS STREAMING API RESPONSE ===")
+    console.log("Response structure:", Object.keys(data))
+    console.log("Full response:", JSON.stringify(data, null, 2))
 
     // Check if the response has the expected structure
     if (!data || !data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {

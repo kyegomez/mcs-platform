@@ -34,7 +34,10 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
         auto_generate_prompt: false,
       },
       task: message,
-      history: historyFormatted, // Always include history, even if empty
+      history: historyFormatted.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
     }
 
     console.log("Sending request to chat API:", {
@@ -112,7 +115,10 @@ export async function streamChatWithAgent(
         auto_generate_prompt: false,
       },
       task: message,
-      history: historyFormatted, // Always include history, even if empty
+      history: historyFormatted.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
     }
 
     console.log("Sending request to stream API:", {
