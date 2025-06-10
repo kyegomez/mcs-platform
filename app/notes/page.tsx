@@ -135,6 +135,16 @@ export default function NotesPage() {
     }
   }, [notes])
 
+  // Handle create note from command palette
+  useEffect(() => {
+    const shouldCreateNote = localStorage.getItem("mcs-create-note")
+    if (shouldCreateNote) {
+      localStorage.removeItem("mcs-create-note")
+      resetForm()
+      setIsDialogOpen(true)
+    }
+  }, [])
+
   // Filter and sort notes
   useEffect(() => {
     const filtered = notes.filter((note) => {
@@ -448,7 +458,7 @@ export default function NotesPage() {
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Symptoms">All Categories</SelectItem>
+                    <SelectItem value="All Categories">All Categories</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}

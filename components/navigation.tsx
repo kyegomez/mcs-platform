@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { MessageSquare, FileText, Activity, User } from "lucide-react"
+import { MessageSquare, FileText, Activity, User, Search, Command } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 const Navigation = () => {
   const pathname = usePathname()
@@ -44,23 +45,48 @@ const Navigation = () => {
           </Link>
 
           {/* Navigation */}
-          <nav className="flex items-center space-x-1">
-            {routes.map((route) => (
-              <Link
-                key={route.path}
-                href={route.path}
-                className={cn(
-                  "flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                  pathname === route.path
-                    ? "bg-mcs-blue/20 text-mcs-blue"
-                    : "text-gray-400 hover:text-white hover:bg-white/5",
-                )}
-              >
-                <span className="hidden sm:block">{route.name}</span>
-                <span className="sm:hidden">{route.icon}</span>
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center space-x-1">
+              {routes.map((route) => (
+                <Link
+                  key={route.path}
+                  href={route.path}
+                  className={cn(
+                    "flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                    pathname === route.path
+                      ? "bg-mcs-blue/20 text-mcs-blue"
+                      : "text-gray-400 hover:text-white hover:bg-white/5",
+                  )}
+                >
+                  <span className="hidden sm:block">{route.name}</span>
+                  <span className="sm:hidden">{route.icon}</span>
+                </Link>
+              ))}
+            </nav>
+
+            {/* Command Palette Trigger */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex items-center gap-2 border-white/20 text-gray-400 hover:text-white hover:bg-white/5 bg-white/5"
+              onClick={() => {
+                // This will be handled by the global keyboard listener
+                const event = new KeyboardEvent("keydown", {
+                  key: "k",
+                  metaKey: true,
+                  bubbles: true,
+                })
+                document.dispatchEvent(event)
+              }}
+            >
+              <Search className="h-3 w-3" />
+              <span className="text-xs">Search</span>
+              <div className="flex items-center gap-0.5 ml-1">
+                <Command className="h-2.5 w-2.5" />
+                <span className="text-xs">K</span>
+              </div>
+            </Button>
+          </div>
         </div>
       </div>
     </header>
