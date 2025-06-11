@@ -28,6 +28,7 @@ import {
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { GoalsSection } from "@/components/goals-section"
+import { SubscriptionCards } from "@/components/subscription-cards"
 
 interface HealthMetrics {
   notesCount: number
@@ -324,6 +325,9 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Subscription Cards */}
+      <SubscriptionCards />
 
       {/* Goals Section */}
       <GoalsSection />
