@@ -78,7 +78,7 @@ export interface UserSubscription {
   isActive: boolean
   conversationsUsed: number
   conversationsLimit: number
-  renewalDate?: Date
+  renewalDate?: string | Date // Allow both string and Date
   billingCycle?: "monthly" | "annual"
   familyMembers?: number
 }
@@ -88,9 +88,18 @@ export function getUserSubscription(): UserSubscription {
     const saved = localStorage.getItem("mcs-subscription")
     if (saved) {
       const parsed = JSON.parse(saved)
-      // Convert date strings back to Date objects
-      if (parsed.renewalDate) {
-        parsed.renewalDate = new Date(parsed.renewalDate)
+      // Safely convert date strings back to Date objects
+      if (parsed.renewalDate && typeof parsed.renewalDate === "string") {
+        try {
+          parsed.renewalDate = new Date(parsed.renewalDate)
+          // Validate the date
+          if (isNaN(parsed.renewalDate.getTime())) {
+            parsed.renewalDate = undefined
+          }
+        } catch (error) {
+          console.warn("Invalid renewal date format:", parsed.renewalDate)
+          parsed.renewalDate = undefined
+        }
       }
       return parsed
     }
@@ -109,9 +118,19 @@ export function getUserSubscription(): UserSubscription {
 
 export function updateUserSubscription(subscription: UserSubscription): void {
   try {
-    localStorage.setItem("mcs-subscription", JSON.stringify(subscription))
+    // Ensure renewalDate is properly serialized
+    const subscriptionToSave = {
+      ...subscription,
+      renewalDate:
+        subscription.renewalDate instanceof Date ? subscription.renewalDate.toISOString() : subscription.renewalDate,
+    }
+
+    localStorage.setItem("mcs-subscription", JSON.stringify(subscriptionToSave))
+
     // Dispatch event for other components to listen
-    window.dispatchEvent(new CustomEvent("subscriptionUpdated", { detail: subscription }))
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("subscriptionUpdated", { detail: subscription }))
+    }
   } catch (error) {
     console.error("Error saving subscription:", error)
   }
@@ -140,4 +159,27 @@ export function getRemainingConversations(): number {
   const subscription = getUserSubscription()
   if (subscription.conversationsLimit === -1) return -1 // unlimited
   return Math.max(0, subscription.conversationsLimit - subscription.conversationsUsed)
+}
+
+// Safe date formatting function
+export function formatRenewalDate(date: string | Date | undefined): string {
+  if (!date) return "Not set"
+
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date)
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return "Invalid date"
+    }
+
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  } catch (error) {
+    console.error("Error formatting date:", error)
+    return "Invalid date"
+  }
 }

@@ -7,37 +7,35 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Crown, Users, Check, ArrowRight, Calendar, MessageSquare, Shield, Star } from "lucide-react"
 import Link from "next/link"
-
-interface SubscriptionData {
-  tier: "free" | "premium" | "family"
-  isActive: boolean
-  conversationsUsed: number
-  conversationsLimit: number
-  renewalDate?: Date
-  billingCycle?: "monthly" | "annual"
-}
+import {
+  getUserSubscription,
+  updateUserSubscription,
+  formatRenewalDate,
+  type UserSubscription,
+} from "@/lib/subscription-system"
 
 export function SubscriptionCards() {
-  const [subscription, setSubscription] = useState<SubscriptionData>({
+  const [subscription, setSubscription] = useState<UserSubscription>({
     tier: "free",
     isActive: true,
-    conversationsUsed: 8,
+    conversationsUsed: 0,
     conversationsLimit: 15,
   })
 
   const [isAnnual, setIsAnnual] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load subscription data from localStorage
+    // Load subscription data safely
     const loadSubscriptionData = () => {
       try {
-        const savedSubscription = localStorage.getItem("mcs-subscription")
-        if (savedSubscription) {
-          const parsedSubscription = JSON.parse(savedSubscription)
-          setSubscription(parsedSubscription)
-        }
+        const loadedSubscription = getUserSubscription()
+        setSubscription(loadedSubscription)
       } catch (error) {
         console.error("Error loading subscription data:", error)
+        // Keep default subscription on error
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -45,24 +43,29 @@ export function SubscriptionCards() {
   }, [])
 
   const handleUpgrade = (tier: "premium" | "family") => {
-    // In a real app, this would integrate with Stripe or payment processor
-    console.log(`Upgrading to ${tier} plan`)
+    try {
+      // In a real app, this would integrate with Stripe or payment processor
+      console.log(`Upgrading to ${tier} plan`)
 
-    // For demo purposes, simulate upgrade
-    const newSubscription: SubscriptionData = {
-      tier,
-      isActive: true,
-      conversationsUsed: subscription.conversationsUsed,
-      conversationsLimit: tier === "premium" ? 999 : 999,
-      renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      billingCycle: isAnnual ? "annual" : "monthly",
+      // For demo purposes, simulate upgrade
+      const newSubscription: UserSubscription = {
+        tier,
+        isActive: true,
+        conversationsUsed: subscription.conversationsUsed,
+        conversationsLimit: tier === "premium" ? 999 : 999,
+        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        billingCycle: isAnnual ? "annual" : "monthly",
+      }
+
+      setSubscription(newSubscription)
+      updateUserSubscription(newSubscription)
+    } catch (error) {
+      console.error("Error upgrading subscription:", error)
     }
-
-    setSubscription(newSubscription)
-    localStorage.setItem("mcs-subscription", JSON.stringify(newSubscription))
   }
 
   const getUsagePercentage = () => {
+    if (subscription.conversationsLimit <= 0) return 0
     return (subscription.conversationsUsed / subscription.conversationsLimit) * 100
   }
 
@@ -73,12 +76,15 @@ export function SubscriptionCards() {
     return "bg-mcs-blue"
   }
 
-  const formatRenewalDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-light text-white mb-2">Your Subscription</h2>
+          <p className="text-gray-400 font-light">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -131,7 +137,7 @@ export function SubscriptionCards() {
             <div className="flex items-center gap-2 text-sm text-gray-400 mt-4">
               <Calendar className="w-4 h-4" />
               <span>
-                Renews on {formatRenewalDate(subscription.renewalDate)}({subscription.billingCycle})
+                Renews on {formatRenewalDate(subscription.renewalDate)} ({subscription.billingCycle || "monthly"})
               </span>
             </div>
           )}
