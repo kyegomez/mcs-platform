@@ -24,7 +24,7 @@ const models: AIModel[] = [
     description: "Best for complex reasoning and analysis",
     icon: <Crown className="h-4 w-4" />,
     badge: "Default",
-    color: "text-orange-400",
+    color: "text-blue-400",
   },
   {
     id: "gpt-4o-mini",
@@ -33,7 +33,7 @@ const models: AIModel[] = [
     description: "Fast and efficient for quick responses",
     icon: <Zap className="h-4 w-4" />,
     badge: "Fast",
-    color: "text-green-400",
+    color: "text-blue-300",
   },
   {
     id: "gpt-4.1-2025-04-14",
@@ -42,7 +42,7 @@ const models: AIModel[] = [
     description: "Latest GPT with enhanced capabilities",
     icon: <Sparkles className="h-4 w-4" />,
     badge: "Latest",
-    color: "text-blue-400",
+    color: "text-blue-500",
   },
   {
     id: "claude-sonnet-4-20250514",
@@ -51,7 +51,7 @@ const models: AIModel[] = [
     description: "Next-generation reasoning model",
     icon: <Brain className="h-4 w-4" />,
     badge: "New",
-    color: "text-purple-400",
+    color: "text-blue-600",
   },
 ]
 
@@ -71,52 +71,126 @@ export function ModelSelector({ selectedModel, onModelChange, disabled }: ModelS
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-8 px-3 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-lg border border-white/10"
+          className="
+            h-9 px-3 text-sm font-medium 
+            bg-black/40 hover:bg-black/60 
+            border border-white/10 hover:border-blue-500/30
+            text-white/90 hover:text-white
+            rounded-lg backdrop-blur-sm
+            transition-all duration-200 ease-out
+            shadow-sm hover:shadow-md
+          "
         >
-          <div className="flex items-center gap-2">
-            <div className={currentModel.color}>{currentModel.icon}</div>
-            <span className="hidden sm:inline">{currentModel.name}</span>
-            <span className="sm:hidden">{currentModel.provider}</span>
-            <ChevronDown className="h-3 w-3" />
+          <div className="flex items-center gap-2.5">
+            <div className={`${currentModel.color} transition-colors`}>{currentModel.icon}</div>
+            <span className="hidden sm:inline font-medium">{currentModel.name}</span>
+            <span className="sm:hidden font-medium">{currentModel.provider}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-white/60" />
           </div>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 bg-gray-900/95 backdrop-blur-sm border-white/10 rounded-xl p-2">
-        <div className="text-xs font-medium text-gray-400 px-2 py-1 mb-2">Select AI Model</div>
+      <DropdownMenuContent
+        align="end"
+        className="
+          w-[320px] p-0
+          bg-black/95 backdrop-blur-xl
+          border border-white/10
+          rounded-xl shadow-2xl
+          animate-in fade-in-0 zoom-in-95 duration-200
+        "
+        sideOffset={8}
+      >
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-white/5">
+          <h3 className="text-sm font-semibold text-white">AI Model</h3>
+          <p className="text-xs text-white/60 mt-0.5">Choose your preferred model</p>
+        </div>
 
-        {models.map((model) => (
-          <DropdownMenuItem
-            key={model.id}
-            onClick={() => onModelChange(model.id)}
-            className={`
-              p-3 rounded-lg cursor-pointer transition-all duration-200
-              hover:bg-white/10 focus:bg-white/10
-              ${selectedModel === model.id ? "bg-white/5 border border-white/20" : ""}
-            `}
-          >
-            <div className="flex items-start gap-3 w-full">
-              <div className={`${model.color} mt-0.5`}>{model.icon}</div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-white text-sm">{model.name}</span>
-                  {model.badge && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-white/10 text-gray-300 border-0">
-                      {model.badge}
-                    </Badge>
-                  )}
+        {/* Model List */}
+        <div className="p-2">
+          {models.map((model, index) => (
+            <DropdownMenuItem
+              key={model.id}
+              onClick={() => onModelChange(model.id)}
+              className={`
+                p-0 rounded-lg cursor-pointer 
+                transition-all duration-200 ease-out
+                hover:bg-white/5 focus:bg-white/5
+                ${selectedModel === model.id ? "bg-blue-500/10 hover:bg-blue-500/15" : ""}
+                ${index > 0 ? "mt-1" : ""}
+              `}
+            >
+              <div className="flex items-start gap-3 w-full p-3">
+                {/* Icon */}
+                <div
+                  className={`
+                  ${selectedModel === model.id ? "text-blue-400" : model.color} 
+                  mt-0.5 transition-colors
+                `}
+                >
+                  {model.icon}
                 </div>
 
-                <div className="text-xs text-gray-400 mb-1">{model.provider}</div>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className={`
+                      font-semibold text-sm
+                      ${selectedModel === model.id ? "text-white" : "text-white/90"}
+                    `}
+                    >
+                      {model.name}
+                    </span>
 
-                <div className="text-xs text-gray-500 leading-relaxed">{model.description}</div>
+                    {model.badge && (
+                      <Badge
+                        variant="secondary"
+                        className={`
+                          text-xs px-2 py-0.5 font-medium border-0
+                          ${selectedModel === model.id ? "bg-blue-500/20 text-blue-300" : "bg-white/10 text-white/70"}
+                        `}
+                      >
+                        {model.badge}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div
+                    className={`
+                    text-xs font-medium mb-1
+                    ${selectedModel === model.id ? "text-blue-300" : "text-white/50"}
+                  `}
+                  >
+                    {model.provider}
+                  </div>
+
+                  <div
+                    className={`
+                    text-xs leading-relaxed
+                    ${selectedModel === model.id ? "text-white/80" : "text-white/60"}
+                  `}
+                  >
+                    {model.description}
+                  </div>
+                </div>
+
+                {/* Selection Indicator */}
+                {selectedModel === model.id && (
+                  <div className="flex items-center justify-center w-5 h-5 mt-0.5">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  </div>
+                )}
               </div>
+            </DropdownMenuItem>
+          ))}
+        </div>
 
-              {selectedModel === model.id && <div className="w-2 h-2 rounded-full bg-mcs-blue mt-2" />}
-            </div>
-          </DropdownMenuItem>
-        ))}
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-white/5">
+          <p className="text-xs text-white/50">Model selection persists for your session</p>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )
