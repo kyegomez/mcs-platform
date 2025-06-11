@@ -84,6 +84,7 @@ export async function streamChatWithAgent(
   message: string,
   history: ChatMessage[],
   onChunk: (chunk: string) => void,
+  selectedModel?: string,
 ) {
   try {
     // Format history for the Swarms API
@@ -107,7 +108,7 @@ export async function streamChatWithAgent(
         agent_name: agent.name,
         description: agent.description,
         system_prompt: agent.systemPrompt,
-        model_name: "gpt-4o-mini", // Changed from gpt-4o to gpt-4o-mini
+        model_name: selectedModel || "claude-3-5-sonnet-20240620", // Use selected model or default
         role: "worker",
         max_loops: 1,
         max_tokens: 8192,

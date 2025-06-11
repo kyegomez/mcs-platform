@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getChatHistory, saveChatHistory } from "@/lib/chat-storage"
 import { AgentIcon } from "@/components/agent-icon"
 import { VoiceProcessor } from "@/components/voice-processor"
+import { ModelSelector } from "@/components/model-selector"
+import { useModelSelection } from "@/hooks/use-model-selection"
 
 export default function ChatPage() {
   const params = useParams()
@@ -31,6 +33,8 @@ export default function ChatPage() {
   const [speakResponse, setSpeakResponse] = useState<((text: string) => void) | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const { selectedModel, changeModel, isLoading: modelLoading } = useModelSelection()
 
   // Load chat history from localStorage
   useEffect(() => {
@@ -113,10 +117,16 @@ export default function ChatPage() {
       let fullResponse = ""
 
       // Pass the history along with the current message
-      await streamChatWithAgent(agent, currentInput, historyForApi, (chunk) => {
-        fullResponse += chunk
-        setCurrentStreamingMessage(fullResponse)
-      })
+      await streamChatWithAgent(
+        agent,
+        currentInput,
+        historyForApi,
+        (chunk) => {
+          fullResponse += chunk
+          setCurrentStreamingMessage(fullResponse)
+        },
+        selectedModel,
+      )
 
       // Create the assistant message with the full response
       const assistantMessage: ChatMessage = {
@@ -220,14 +230,22 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearChatHistory}
-            className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
-          >
-            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-          </Button>
+          <div className="flex items-center gap-3">
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelChange={changeModel}
+              disabled={isLoading || modelLoading}
+            />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearChatHistory}
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+            </Button>
+          </div>
         </div>
       </div>
 
