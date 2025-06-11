@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { MessageSquare, FileText, Activity, User, Command } from "lucide-react"
+import { MessageSquare, FileText, Activity, User, Command, DollarSign } from "lucide-react"
 
 const Navigation = () => {
   const pathname = usePathname()
@@ -23,6 +23,11 @@ const Navigation = () => {
       name: "Notes",
       path: "/notes",
       icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      name: "Pricing",
+      path: "/pricing",
+      icon: <DollarSign className="h-5 w-5" />,
     },
     {
       name: "Account",
