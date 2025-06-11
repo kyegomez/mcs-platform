@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { GoalsSection } from "@/components/goals-section"
 
 interface HealthMetrics {
   notesCount: number
@@ -323,6 +324,9 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Goals Section */}
+      <GoalsSection />
 
       {/* Alerts Section */}
       <Card className="border-0 bg-white/5">
