@@ -198,22 +198,22 @@ export default function ChatPage() {
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
       {/* Header */}
-      <div className="glass border-b border-white/10 p-4 mb-4 rounded-xl">
+      <div className="glass border-b border-white/10 p-3 sm:p-4 mb-4 rounded-xl spring-bounce">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.push("/chat")}
-              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl btn-interactive flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center gap-4">
-              <div className="relative">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="relative flex-shrink-0">
                 <div
-                  className="h-12 w-12 rounded-xl flex items-center justify-center border-2"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center border-2 transition-transform duration-200 hover:scale-110"
                   style={{
                     borderColor: agent.iconColor + "30",
                     backgroundColor: agent.iconColor + "10",
@@ -221,31 +221,43 @@ export default function ChatPage() {
                 >
                   <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full status-online border-2 border-black"></div>
+                <div className="absolute -bottom-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 rounded-full status-online border-2 border-black"></div>
               </div>
-              <div>
-                <h1 className="font-bold text-xl text-white">{agent.name}</h1>
-                <p className="text-sm text-mcs-blue">{agent.specialty}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-bold text-lg sm:text-xl text-white truncate">{agent.name}</h1>
+                <p className="text-xs sm:text-sm text-mcs-blue truncate">{agent.specialty}</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onModelChange={changeModel}
-              disabled={isLoading || modelLoading}
-            />
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="hidden sm:block">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelChange={changeModel}
+                disabled={isLoading || modelLoading}
+              />
+            </div>
 
             <Button
               variant="ghost"
               size="sm"
               onClick={clearChatHistory}
-              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl btn-interactive text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+              <Trash2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Clear</span>
             </Button>
           </div>
+        </div>
+
+        {/* Mobile Model Selector */}
+        <div className="sm:hidden mt-3 pt-3 border-t border-white/10">
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={changeModel}
+            disabled={isLoading || modelLoading}
+          />
         </div>
       </div>
 
@@ -348,13 +360,13 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="glass p-4 rounded-xl border border-white/10">
-        <div className="flex gap-3">
+      <form onSubmit={handleSubmit} className="glass p-3 sm:p-4 rounded-xl border border-white/10">
+        <div className="flex gap-2 sm:gap-3">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message or use voice input..."
-            className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
+            className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400 text-sm sm:text-base focus-smooth"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -364,22 +376,34 @@ export default function ChatPage() {
             }}
           />
 
-          <div className="flex items-center gap-2">
-            <VoiceProcessor
-              onTranscript={handleVoiceTranscript}
-              onSpeakResponse={handleSpeakResponse}
-              isListening={isListening}
-              setIsListening={setIsListening}
-            />
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="hidden sm:block">
+              <VoiceProcessor
+                onTranscript={handleVoiceTranscript}
+                onSpeakResponse={handleSpeakResponse}
+                isListening={isListening}
+                setIsListening={setIsListening}
+              />
+            </div>
 
             <Button
               type="submit"
               disabled={isLoading || !input.trim() || isListening}
-              className="btn-primary rounded-xl px-6 shrink-0"
+              className="btn-primary rounded-xl px-4 sm:px-6 shrink-0 btn-interactive btn-mobile"
             >
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </div>
+        </div>
+
+        {/* Mobile Voice Processor */}
+        <div className="sm:hidden mt-2 pt-2 border-t border-white/10">
+          <VoiceProcessor
+            onTranscript={handleVoiceTranscript}
+            onSpeakResponse={handleSpeakResponse}
+            isListening={isListening}
+            setIsListening={setIsListening}
+          />
         </div>
       </form>
     </div>

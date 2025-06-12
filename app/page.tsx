@@ -7,7 +7,7 @@ import { agents } from "@/data/agents"
 import { AgentIcon } from "@/components/agent-icon"
 import { getChatAgentIds, getChatHistory } from "@/lib/chat-storage"
 import Link from "next/link"
-import { FileText, ArrowRight, MessageSquare } from "lucide-react"
+import { FileText, ArrowRight, MessageSquare, Sparkles } from "lucide-react"
 import Head from "next/head"
 
 interface RecentActivity {
@@ -22,6 +22,7 @@ interface RecentActivity {
 export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [notesCount, setNotesCount] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
     // Get real recent activity from chat history
@@ -67,6 +68,7 @@ export default function Dashboard() {
 
     getRecentActivity()
     setNotesCount(getNotes())
+    setIsLoaded(true)
 
     const handleStorageChange = () => {
       getRecentActivity()
@@ -92,6 +94,22 @@ export default function Dashboard() {
     return `${Math.floor(diffInMinutes / 1440)}d`
   }
 
+  if (!isLoaded) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6">
+        <div className="text-center pt-8 pb-4">
+          <div className="loading-shimmer h-10 w-48 mx-auto rounded-lg mb-4"></div>
+          <div className="loading-shimmer h-6 w-64 mx-auto rounded-lg"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="loading-shimmer h-32 rounded-2xl"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <Head>
@@ -107,35 +125,42 @@ export default function Dashboard() {
         <link rel="canonical" href="https://mcs-health.vercel.app/" />
       </Head>
 
-      <div className="max-w-4xl mx-auto space-y-8 px-4">
-        {/* Simple Header */}
-        <header className="text-center pt-8 pb-4">
-          <h1 className="text-4xl font-light text-white mb-2">Health</h1>
-          <p className="text-gray-400 text-lg font-light">Your personal healthcare assistant</p>
+      <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6 page-transition">
+        {/* Header with animation */}
+        <header className="text-center pt-8 pb-4 spring-bounce">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="h-8 w-8 text-mcs-blue animate-pulse" />
+            <h1 className="text-4xl sm:text-5xl font-light text-white">Health</h1>
+          </div>
+          <p className="text-gray-400 text-lg sm:text-xl font-light max-w-2xl mx-auto">
+            Your personal healthcare assistant powered by AI
+          </p>
         </header>
 
-        {/* Main Actions - Apple-style large buttons */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Main Actions">
-          <Link href="/chat" aria-label="Start consultation with AI medical specialists">
-            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/20 hover:to-mcs-blue/10 transition-all duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <MessageSquare className="w-8 h-8 text-mcs-blue" />
+        {/* Main Actions - Enhanced for mobile */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" aria-label="Main Actions">
+          <Link href="/chat" aria-label="Start consultation with AI medical specialists" className="stagger-item">
+            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/20 hover:to-mcs-blue/10 card-interactive h-full">
+              <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
+                  <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-mcs-blue" />
                 </div>
-                <h2 className="text-xl font-medium text-white mb-2">Talk to a Specialist</h2>
-                <p className="text-gray-400 font-light">Get instant medical advice from AI specialists</p>
+                <h2 className="text-xl sm:text-2xl font-medium text-white mb-2 sm:mb-3">Talk to a Specialist</h2>
+                <p className="text-gray-400 font-light text-sm sm:text-base">
+                  Get instant medical advice from AI specialists
+                </p>
               </CardContent>
             </Card>
           </Link>
 
-          <Link href="/notes" aria-label="Access your health journal and notes">
-            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 transition-all duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <FileText className="w-8 h-8 text-green-400" />
+          <Link href="/notes" aria-label="Access your health journal and notes" className="stagger-item">
+            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 card-interactive h-full">
+              <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
+                  <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-green-400" />
                 </div>
-                <h2 className="text-xl font-medium text-white mb-2">Health Journal</h2>
-                <p className="text-gray-400 font-light">
+                <h2 className="text-xl sm:text-2xl font-medium text-white mb-2 sm:mb-3">Health Journal</h2>
+                <p className="text-gray-400 font-light text-sm sm:text-base">
                   {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey"}
                 </p>
               </CardContent>
@@ -143,26 +168,34 @@ export default function Dashboard() {
           </Link>
         </section>
 
-        {/* Recent Conversations - Only show if there are any */}
+        {/* Recent Conversations - Enhanced mobile layout */}
         {recentActivity.length > 0 && (
-          <section className="space-y-4" aria-label="Recent Activity">
+          <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Recent Activity">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-medium text-white">Recent</h2>
+              <h2 className="text-xl sm:text-2xl font-medium text-white">Recent</h2>
               <Link href="/chat">
-                <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
+                <Button
+                  variant="ghost"
+                  className="text-mcs-blue hover:bg-mcs-blue/10 font-light btn-interactive text-sm sm:text-base"
+                >
                   View All
                 </Button>
               </Link>
             </div>
 
             <div className="space-y-3">
-              {recentActivity.map((activity) => (
-                <Link key={activity.agentId} href={`/chat/${activity.agentId}`}>
-                  <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
-                    <CardContent className="p-4">
+              {recentActivity.map((activity, index) => (
+                <Link
+                  key={activity.agentId}
+                  href={`/chat/${activity.agentId}`}
+                  className="stagger-item"
+                  style={{ animationDelay: `${(index + 2) * 0.1}s` }}
+                >
+                  <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 card-interactive">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-4">
                         <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
                           style={{
                             backgroundColor: activity.iconColor + "20",
                           }}
@@ -170,16 +203,16 @@ export default function Dashboard() {
                           <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white group-hover:text-mcs-blue transition-colors">
+                          <p className="font-medium text-white group-hover:text-mcs-blue transition-colors text-sm sm:text-base">
                             {activity.agentName}
                           </p>
-                          <p className="text-sm text-gray-400 font-light">{activity.specialty}</p>
+                          <p className="text-sm text-gray-400 font-light truncate">{activity.specialty}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <span className="text-sm text-gray-500 font-light">
                             {formatTimeAgo(activity.lastMessageTime)}
                           </span>
-                          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1" />
+                          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1 ml-auto" />
                         </div>
                       </div>
                     </CardContent>
@@ -190,30 +223,32 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Featured Specialists - Simplified grid */}
-        <section className="space-y-4" aria-label="Medical Specialists">
-          <h2 className="text-xl font-medium text-white">Specialists</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {agents.slice(0, 8).map((agent) => (
+        {/* Featured Specialists - Mobile-optimized grid */}
+        <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Medical Specialists">
+          <h2 className="text-xl sm:text-2xl font-medium text-white">Specialists</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {agents.slice(0, 8).map((agent, index) => (
               <Link
                 key={agent.id}
                 href={`/chat/${agent.id}`}
                 aria-label={`Chat with ${agent.name}, ${agent.specialty}`}
+                className="stagger-item"
+                style={{ animationDelay: `${(index + 5) * 0.1}s` }}
               >
-                <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
-                  <CardContent className="p-4 text-center">
+                <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 card-interactive h-full">
+                  <CardContent className="p-3 sm:p-4 text-center h-full flex flex-col justify-center">
                     <div
-                      className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                      className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
                       style={{
                         backgroundColor: agent.iconColor + "20",
                       }}
                     >
-                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="md" />
+                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
                     </div>
-                    <h3 className="font-medium text-white text-sm mb-1 group-hover:text-mcs-blue transition-colors">
+                    <h3 className="font-medium text-white text-xs sm:text-sm mb-1 group-hover:text-mcs-blue transition-colors line-clamp-1">
                       {agent.name}
                     </h3>
-                    <p className="text-xs text-gray-400 font-light">{agent.specialty}</p>
+                    <p className="text-xs text-gray-400 font-light line-clamp-2">{agent.specialty}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -222,7 +257,7 @@ export default function Dashboard() {
 
           <div className="text-center pt-4">
             <Link href="/chat">
-              <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light">
+              <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light btn-interactive">
                 View All Specialists
               </Button>
             </Link>

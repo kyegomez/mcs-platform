@@ -400,11 +400,11 @@ export default function NotesPage() {
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
       {/* Header */}
-      <div className="space-y-4">
+      <div className="space-y-4 spring-bounce">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight gradient-text">Health Journal</h1>
-            <p className="text-gray-400 text-sm sm:text-base">
+            <p className="text-gray-400 text-sm sm:text-base mt-1">
               Document your health journey with notes, files, and insights.
             </p>
           </div>
@@ -413,7 +413,7 @@ export default function NotesPage() {
             {isMobile ? (
               <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DrawerTrigger asChild>
-                  <Button onClick={resetForm} className="btn-primary flex-1 sm:flex-none">
+                  <Button onClick={resetForm} className="btn-primary flex-1 sm:flex-none btn-interactive btn-mobile">
                     <Plus className="h-4 w-4 mr-2" />
                     New Note
                   </Button>
@@ -430,7 +430,7 @@ export default function NotesPage() {
             ) : (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={resetForm} className="btn-primary">
+                  <Button onClick={resetForm} className="btn-primary btn-interactive">
                     <Plus className="h-4 w-4 mr-2" />
                     New Note
                   </Button>
@@ -449,7 +449,7 @@ export default function NotesPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="glass-card">
+        <Card className="glass-card stagger-item">
           <CardContent className="p-3 sm:p-4">
             <div className="space-y-3 sm:space-y-4">
               {/* Search */}
@@ -459,7 +459,7 @@ export default function NotesPage() {
                   placeholder="Search notes, content, or tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white text-base"
+                  className="pl-10 bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white text-sm sm:text-base focus-smooth btn-mobile"
                 />
               </div>
 
@@ -468,7 +468,7 @@ export default function NotesPage() {
                 <Button
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="w-full justify-between"
+                  className="w-full justify-between btn-interactive btn-mobile"
                 >
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
@@ -481,7 +481,7 @@ export default function NotesPage() {
               {/* Filters */}
               <div className={`${isMobile && !showFilters ? "hidden" : "flex"} flex-col sm:flex-row gap-2 flex-wrap`}>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-40 bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="w-full sm:w-40 bg-white/5 border-white/10 text-white focus-smooth">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
@@ -497,12 +497,12 @@ export default function NotesPage() {
 
                 {allTags.length > 0 && (
                   <Select value={selectedTag} onValueChange={setSelectedTag}>
-                    <SelectTrigger className="w-full sm:w-32 bg-white/5 border-white/10 text-white">
+                    <SelectTrigger className="w-full sm:w-32 bg-white/5 border-white/10 text-white focus-smooth">
                       <Tag className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="Tag" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Tags</SelectItem>
+                      <SelectItem value="all">All Tags</SelectItem>
                       {allTags.map((tag) => (
                         <SelectItem key={tag} value={tag}>
                           {tag}
@@ -517,7 +517,7 @@ export default function NotesPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowPinnedOnly(!showPinnedOnly)}
-                    className={`flex-1 sm:flex-none ${showPinnedOnly ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400" : ""}`}
+                    className={`flex-1 sm:flex-none btn-interactive ${showPinnedOnly ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400" : ""}`}
                   >
                     <Pin className="h-4 w-4 mr-2" />
                     Pinned
@@ -527,6 +527,7 @@ export default function NotesPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    className="btn-interactive"
                   >
                     {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
                   </Button>
@@ -536,6 +537,7 @@ export default function NotesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+                      className="btn-interactive"
                     >
                       {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
                     </Button>
@@ -556,9 +558,9 @@ export default function NotesPage() {
         </div>
 
         {filteredNotes.length === 0 ? (
-          <Card className="glass-card">
+          <Card className="glass-card stagger-item">
             <CardContent className="p-8 sm:p-12 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-600 to-gray-500 flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-600 to-gray-500 flex items-center justify-center elastic-scale">
                 <Plus className="h-8 w-8 text-gray-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">No notes found</h3>
@@ -567,7 +569,7 @@ export default function NotesPage() {
                   ? "Start documenting your health journey by creating your first note."
                   : "No notes match your current filters. Try adjusting your search criteria."}
               </p>
-              <Button onClick={() => setIsDialogOpen(true)} className="btn-primary">
+              <Button onClick={() => setIsDialogOpen(true)} className="btn-primary btn-interactive">
                 Create Your First Note
               </Button>
             </CardContent>
@@ -578,14 +580,10 @@ export default function NotesPage() {
               isMobile || viewMode === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
             }`}
           >
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onTogglePin={handleTogglePin}
-              />
+            {filteredNotes.map((note, index) => (
+              <div key={note.id} className="stagger-item" style={{ animationDelay: `${index * 0.1}s` }}>
+                <NoteCard note={note} onEdit={handleEdit} onDelete={handleDelete} onTogglePin={handleTogglePin} />
+              </div>
             ))}
           </div>
         )}
