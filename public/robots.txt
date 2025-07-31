@@ -7,5 +7,16 @@ Sitemap: https://mcs-health.vercel.app/sitemap.xml
 # Crawl-delay
 Crawl-delay: 1
 
-# Disallow admin or sensitive areas (none currently)
-# Disallow: /admin
+# Disallow admin areas (if any)
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow important pages
+Allow: /chat/
+Allow: /notes/
+Allow: /reminders/
+Allow: /alerts/
+Allow: /account/
+Allow: /about/
+Allow: /pricing/

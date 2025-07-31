@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   },
   description:
     "Get instant medical advice from AI specialists. Track your health journey with smart notes, reminders, and personalized care. The future of healthcare is here.",
+  applicationName: "MCS - Modern Care System",
+  referrer: "origin-when-cross-origin",
+  authors: [{ name: "MCS Team", url: "https://mcs-health.vercel.app" }],
+  creator: "MCS - Modern Care System",
+  publisher: "MCS - Modern Care System",
   keywords: [
     "AI healthcare",
     "medical assistant",
@@ -58,7 +63,8 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "MCS - Modern Care System Dashboard",
+        alt: "MCS - Modern Care System - AI-Powered Healthcare Assistant",
+        type: "image/png",
       },
     ],
   },
@@ -99,8 +105,19 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "theme-color": "#0070f3",
     "msapplication-TileColor": "#0070f3",
+    "msapplication-config": "/browserconfig.xml",
+    "apple-mobile-web-app-title": "MCS Health",
+    "format-detection": "telephone=no",
   },
-    generator: 'v0.dev'
+  alternates: {
+    canonical: "https://mcs-health.vercel.app",
+  },
+  verification: {
+    google: "your-google-verification-code",
+    yandex: "your-yandex-verification-code",
+    yahoo: "your-yahoo-verification-code",
+  },
+  generator: 'v0.dev'
 }
 
 // JSON-LD Structured Data
@@ -161,6 +178,21 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Additional SEO Meta Tags */}
+        <meta name="google-site-verification" content="your-google-verification-code" />
+        <meta name="msvalidate.01" content="your-bing-verification-code" />
+        <meta name="yandex-verification" content="your-yandex-verification-code" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/og-image.png" as="image" type="image/png" />
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        
+        {/* Security headers */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       </head>
       <body className={`${inter.className}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} disableTransitionOnChange>
