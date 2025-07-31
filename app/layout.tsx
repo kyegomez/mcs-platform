@@ -162,13 +162,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.className} dark`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      <body className={`${inter.className}`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} disableTransitionOnChange>
           <CommandPaletteProvider>
-            <div className="min-h-screen bg-black text-white flex flex-col">
+                          <div className="min-h-screen bg-background text-foreground flex flex-col">
               <Navigation />
               <main className="flex-1 container mx-auto py-4 px-4 md:px-6">{children}</main>
-              <footer className="py-4 border-t border-mcs-gray text-center text-sm text-mcs-gray-light">
+                              <footer className="py-4 border-t border-border text-center text-sm text-muted-foreground">
                 © {new Date().getFullYear()} MCS - Modern Care System. All rights reserved.
               </footer>
             </div>

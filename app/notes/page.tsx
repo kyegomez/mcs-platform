@@ -14,7 +14,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { Plus, Search, Filter, Grid, List, SortAsc, SortDesc, Pin, Tag, X, ChevronDown, ChevronUp } from "lucide-react"
 import { NoteCard } from "@/components/note-card"
 import { FileUpload, FilePreview } from "@/components/file-upload"
-import { deleteFile } from "@/lib/supabase"
+// Supabase functionality removed - file deletion will be handled differently
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const categories = [
@@ -237,14 +237,8 @@ export default function NotesPage() {
     const note = notes.find((n) => n.id === id)
     if (!note) return
 
-    // Delete attachments from Supabase
-    for (const attachment of note.attachments) {
-      try {
-        await deleteFile(attachment.url)
-      } catch (error) {
-        console.error("Error deleting file:", error)
-      }
-    }
+    // File deletion temporarily disabled
+    console.log("File deletion functionality is currently unavailable")
 
     const updatedNotes = notes.filter((note) => note.id !== id)
     setNotes(updatedNotes)
@@ -272,12 +266,9 @@ export default function NotesPage() {
   const removeAttachment = async (fileId: string) => {
     const file = attachments.find((f) => f.id === fileId)
     if (file) {
-      try {
-        await deleteFile(file.url)
+      // File deletion temporarily disabled
+      console.log("File deletion functionality is currently unavailable")
         setAttachments(attachments.filter((f) => f.id !== fileId))
-      } catch (error) {
-        console.error("Error deleting file:", error)
-      }
     }
   }
 
@@ -298,7 +289,7 @@ export default function NotesPage() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Category</label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+            <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -357,7 +348,7 @@ export default function NotesPage() {
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-            className="bg-white/5 border-white/10 focus-visible:ring-mcs-blue text-white text-base"
+            className="bg-background/50 border-border/50 focus-visible:ring-primary text-foreground text-base"
           />
           <Button type="button" onClick={addTag} variant="outline" className="shrink-0">
             Add
@@ -563,7 +554,7 @@ export default function NotesPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-gray-600 to-gray-500 flex items-center justify-center elastic-scale">
                 <Plus className="h-8 w-8 text-gray-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">No notes found</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No notes found</h3>
               <p className="text-gray-400 mb-4 text-sm sm:text-base">
                 {notes.length === 0
                   ? "Start documenting your health journey by creating your first note."

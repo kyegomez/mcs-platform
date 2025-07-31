@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { uploadFile, testSupabaseConnection } from "@/lib/supabase"
+// Supabase functionality removed - file upload will be handled differently
 import type { FileAttachment } from "@/types/agent"
 import { Upload, X, File, ImageIcon, FileText, Download, AlertCircle, CheckCircle, WifiOff } from "lucide-react"
 import { v4 as uuidv4 } from "uuid"
@@ -39,22 +39,10 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, acceptedTypes }: Fil
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ]
 
-  // Test Supabase connection on component mount
+  // File upload functionality temporarily disabled
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const result = await testSupabaseConnection()
-        setConnectionStatus(result.success ? "connected" : "disconnected")
-        if (!result.success) {
-          setError(result.message)
-        }
-      } catch (error) {
         setConnectionStatus("disconnected")
-        setError("Failed to connect to storage service")
-      }
-    }
-
-    checkConnection()
+    setError("File upload functionality is currently unavailable")
   }, [])
 
   const validateFile = (file: File): string | null => {
@@ -96,8 +84,8 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, acceptedTypes }: Fil
         }
 
         try {
-          // Upload to Supabase
-          const url = await uploadFile(file)
+          // File upload temporarily disabled
+          throw new Error("File upload functionality is currently unavailable")
 
           const fileAttachment: FileAttachment = {
             id: uuidv4(),
@@ -163,16 +151,9 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, acceptedTypes }: Fil
     setConnectionStatus("checking")
     setError(null)
 
-    try {
-      const result = await testSupabaseConnection()
-      setConnectionStatus(result.success ? "connected" : "disconnected")
-      if (!result.success) {
-        setError(result.message)
-      }
-    } catch (error) {
+    // File upload functionality temporarily disabled
       setConnectionStatus("disconnected")
-      setError("Failed to connect to storage service")
-    }
+    setError("File upload functionality is currently unavailable")
   }
 
   const isDisabled = uploading || connectionStatus !== "connected"

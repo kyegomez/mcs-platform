@@ -3,7 +3,7 @@ import type { Agent, ChatMessage } from "@/types/agent"
 // Update the base URL
 const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
 
-export async function chatWithAgent(agent: Agent, message: string, history: ChatMessage[]) {
+export async function chatWithAgent(agent: Agent, message: string, history: ChatMessage[], selectedModel?: string) {
   try {
     // Format history for the Swarms API
     // Only include messages that have content (not empty strings)
@@ -26,7 +26,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
         agent_name: agent.name,
         description: agent.description,
         system_prompt: agent.systemPrompt,
-        model_name: "gpt-4o-mini", // Changed from gpt-4o to gpt-4o-mini
+        model_name: selectedModel || "claude-sonnet-4-20250514", // Use selected model or default
         role: "worker",
         max_loops: 1,
         max_tokens: 8192,
@@ -60,19 +60,14 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
     }
 
     const data = await response.json()
+    
+    console.log("=== CHAT WITH AGENT DEBUG ===")
+    console.log("Raw API response data:", data)
+    console.log("Data type:", typeof data)
+    console.log("Data keys:", Object.keys(data))
 
-    // If the API processed the output for us, use that
-    if (data.processedOutput) {
-      return data.processedOutput
-    }
-
-    // Otherwise, try to extract the content from the last output
-    if (data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
-      const lastOutput = data.outputs[data.outputs.length - 1]
-      return lastOutput?.content || "No content found in response"
-    }
-
-    return "Received response but couldn't extract content"
+    // Return the full response object so the client can access both processedOutput and outputs
+    return data
   } catch (error) {
     console.error("Error chatting with agent:", error)
     throw error
@@ -108,7 +103,7 @@ export async function streamChatWithAgent(
         agent_name: agent.name,
         description: agent.description,
         system_prompt: agent.systemPrompt,
-        model_name: selectedModel || "claude-3-5-sonnet-20240620", // Use selected model or default
+        model_name: selectedModel || "claude-sonnet-4-20250514", // Use selected model or default
         role: "worker",
         max_loops: 1,
         max_tokens: 8192,

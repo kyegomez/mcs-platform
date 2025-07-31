@@ -255,7 +255,7 @@ export default function AccountPage() {
           <div className="w-24 h-6 bg-white/10 rounded mx-auto mb-2"></div>
           <div className="w-48 h-4 bg-white/5 rounded mx-auto"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="border-0 bg-white/5">
               <CardContent className="p-6">
@@ -271,57 +271,57 @@ export default function AccountPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4">
       {/* Header */}
-      <div className="text-center pt-8 pb-4">
-        <h1 className="text-4xl font-light text-white mb-2">Account</h1>
-        <p className="text-gray-400 text-lg font-light">Your health journey overview</p>
+      <div className="text-center pt-6 sm:pt-8 pb-4">
+        <h1 className="text-3xl sm:text-4xl font-light text-foreground mb-2">Account</h1>
+        <p className="text-muted-foreground text-base sm:text-lg font-light">Your health journey overview</p>
       </div>
 
       {/* Health Score Card */}
-      <Card className="border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5">
-        <CardContent className="p-8 text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-mcs-blue/20 flex items-center justify-center">
-            <Heart className="w-10 h-10 text-mcs-blue" />
+      <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5">
+        <CardContent className="p-6 sm:p-8 text-center">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+            <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
           </div>
-          <h2 className="text-3xl font-light text-white mb-2">Health Score</h2>
-          <div className={`text-6xl font-light mb-2 ${getHealthScoreColor(metrics.healthScore)}`}>
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground mb-2">Health Score</h2>
+          <div className={`text-4xl sm:text-6xl font-light mb-2 ${getHealthScoreColor(metrics.healthScore)}`}>
             {metrics.healthScore}
           </div>
-          <p className={`text-lg font-medium mb-4 ${getHealthScoreColor(metrics.healthScore)}`}>
+          <p className={`text-base sm:text-lg font-medium mb-4 ${getHealthScoreColor(metrics.healthScore)}`}>
             {getHealthScoreLabel(metrics.healthScore)}
           </p>
-          <p className="text-gray-400 font-light">Based on your activity, notes, and specialist consultations</p>
+          <p className="text-muted-foreground font-light text-sm sm:text-base">Based on your activity, notes, and specialist consultations</p>
         </CardContent>
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
               <FileText className="w-6 h-6 text-green-400" />
             </div>
-            <div className="text-3xl font-light text-white mb-1">{metrics.notesCount}</div>
-            <p className="text-gray-400 font-light">Health Notes</p>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.notesCount}</div>
+            <p className="text-muted-foreground font-light">Health Notes</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
               <MessageSquare className="w-6 h-6 text-blue-400" />
             </div>
-            <div className="text-3xl font-light text-white mb-1">{metrics.specialistsCount}</div>
-            <p className="text-gray-400 font-light">Specialists Consulted</p>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.specialistsCount}</div>
+            <p className="text-muted-foreground font-light">Specialists Consulted</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-white/5 hover:bg-white/10 transition-all duration-200">
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
               <Clock className="w-6 h-6 text-purple-400" />
             </div>
-            <div className="text-3xl font-light text-white mb-1">{metrics.streakDays}</div>
-            <p className="text-gray-400 font-light">Day Streak</p>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.streakDays}</div>
+            <p className="text-muted-foreground font-light">Day Streak</p>
           </CardContent>
         </Card>
       </div>
@@ -333,14 +333,14 @@ export default function AccountPage() {
       <GoalsSection />
 
       {/* Alerts Section */}
-      <Card className="border-0 bg-white/5">
+      <Card className="border-0 bg-background/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5 text-mcs-blue" />
-              <CardTitle className="text-white font-medium">Alerts & Notifications</CardTitle>
+              <CardTitle className="text-foreground font-medium">Alerts & Notifications</CardTitle>
               {unreadAlertsCount > 0 && (
-                <Badge className="bg-mcs-blue text-white text-xs">{unreadAlertsCount} new</Badge>
+                <Badge className="bg-primary text-primary-foreground text-xs">{unreadAlertsCount} new</Badge>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -349,7 +349,7 @@ export default function AccountPage() {
                   variant="ghost"
                   size="sm"
                   onClick={markAllAlertsAsRead}
-                  className="text-gray-400 hover:text-white text-xs"
+                  className="text-muted-foreground hover:text-foreground text-xs"
                 >
                   <Check className="h-3 w-3 mr-1" />
                   Mark all read
@@ -359,7 +359,7 @@ export default function AccountPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setAlertsExpanded(!alertsExpanded)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {alertsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -369,8 +369,8 @@ export default function AccountPage() {
         <CardContent>
           {alerts.length === 0 ? (
             <div className="text-center py-6">
-              <Bell className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-400 font-light">No alerts at this time</p>
+              <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground font-light">No alerts at this time</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -381,7 +381,7 @@ export default function AccountPage() {
                   <div
                     key={alert.id}
                     className={`p-4 rounded-lg ${
-                      !alert.read ? "bg-mcs-blue/10 border border-mcs-blue/20" : "bg-white/5"
+                      !alert.read ? "bg-mcs-blue/10 border border-mcs-blue/20" : "bg-background/50"
                     } transition-all duration-200`}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -389,13 +389,13 @@ export default function AccountPage() {
                         {getSeverityIcon(alert.severity)}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-white text-sm">{alert.title}</h4>
+                            <h4 className="font-medium text-foreground text-sm">{alert.title}</h4>
                             {!alert.read && <span className="h-1.5 w-1.5 rounded-full bg-mcs-blue"></span>}
                           </div>
-                          <p className="text-gray-400 text-sm font-light mb-2">{alert.description}</p>
+                          <p className="text-muted-foreground text-sm font-light mb-2">{alert.description}</p>
                           <div className="flex items-center gap-2">
                             {getSeverityBadge(alert.severity)}
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-muted-foreground/70">
                               {alert.createdAt.toLocaleDateString()} at{" "}
                               {alert.createdAt.toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -410,7 +410,7 @@ export default function AccountPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => markAsRead(alert.id)}
-                          className="text-gray-400 hover:text-white p-1"
+                          className="text-muted-foreground hover:text-foreground p-1"
                         >
                           <Check className="h-3 w-3" />
                         </Button>
@@ -423,7 +423,7 @@ export default function AccountPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewNote(alert.noteId!)}
-                          className="text-xs border-white/20 text-white hover:bg-white/10"
+                          className="text-xs border-border/50 text-foreground hover:bg-accent"
                         >
                           <FileText className="h-3 w-3 mr-1" />
                           View Note
@@ -435,7 +435,7 @@ export default function AccountPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs border-white/20 text-white hover:bg-white/10"
+                            className="text-xs border-border/50 text-foreground hover:bg-accent"
                           >
                             Chat with {agent.name}
                           </Button>
@@ -451,7 +451,7 @@ export default function AccountPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setAlertsExpanded(true)}
-                  className="w-full text-gray-400 hover:text-white text-sm"
+                  className="w-full text-muted-foreground hover:text-foreground text-sm"
                 >
                   Show {alerts.length - 2} more alerts
                 </Button>
@@ -462,27 +462,27 @@ export default function AccountPage() {
       </Card>
 
       {/* Activity Summary */}
-      <Card className="border-0 bg-white/5">
+      <Card className="border-0 bg-background/50">
         <CardHeader>
-          <CardTitle className="text-white font-medium flex items-center gap-2">
+          <CardTitle className="text-foreground font-medium flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-mcs-blue" />
             Activity Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between py-2">
-            <span className="text-gray-300 font-light">Total Messages</span>
-            <span className="text-white font-medium">{metrics.messagesCount}</span>
+            <span className="text-muted-foreground font-light">Total Messages</span>
+            <span className="text-foreground font-medium">{metrics.messagesCount}</span>
           </div>
           <div className="flex items-center justify-between py-2">
-            <span className="text-gray-300 font-light">Last Activity</span>
-            <span className="text-white font-medium">
+            <span className="text-muted-foreground font-light">Last Activity</span>
+            <span className="text-foreground font-medium">
               {metrics.lastActivityDate ? metrics.lastActivityDate.toLocaleDateString() : "No activity yet"}
             </span>
           </div>
           <div className="flex items-center justify-between py-2">
-            <span className="text-gray-300 font-light">Account Created</span>
-            <span className="text-white font-medium">{new Date().toLocaleDateString()}</span>
+            <span className="text-muted-foreground font-light">Account Created</span>
+            <span className="text-foreground font-medium">{new Date().toLocaleDateString()}</span>
           </div>
         </CardContent>
       </Card>
@@ -490,28 +490,28 @@ export default function AccountPage() {
       {/* Integrations Coming Soon */}
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-light text-white mb-2">Integrations</h2>
-          <p className="text-gray-400 font-light">Connect your favorite health apps and devices</p>
+          <h2 className="text-xl sm:text-2xl font-light text-foreground mb-2">Integrations</h2>
+          <p className="text-muted-foreground font-light text-sm sm:text-base">Connect your favorite health apps and devices</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {integrations.map((integration) => {
             const IconComponent = integration.icon
             return (
               <Card
                 key={integration.name}
-                className="border-0 bg-white/5 hover:bg-white/10 transition-all duration-200 group"
+                className="border-0 bg-background/50 hover:bg-accent transition-all duration-200 group"
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div
                       className={`w-12 h-12 rounded-xl bg-gradient-to-br ${integration.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
                     >
-                      <IconComponent className="w-6 h-6 text-white" />
+                      <IconComponent className="w-6 h-6 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-white mb-1">{integration.name}</h3>
-                      <p className="text-sm text-gray-400 font-light mb-2">{integration.description}</p>
+                      <h3 className="font-medium text-foreground mb-1">{integration.name}</h3>
+                      <p className="text-sm text-muted-foreground font-light mb-2">{integration.description}</p>
                       <Badge variant="outline" className="text-xs border-mcs-blue/30 text-mcs-blue bg-mcs-blue/10">
                         {integration.status}
                       </Badge>
@@ -524,19 +524,19 @@ export default function AccountPage() {
         </div>
 
         <div className="text-center pt-4">
-          <p className="text-gray-500 font-light text-sm">More integrations coming soon. Stay tuned for updates!</p>
+          <p className="text-muted-foreground/70 font-light text-sm">More integrations coming soon. Stay tuned for updates!</p>
         </div>
       </div>
 
       {/* Account Actions */}
-      <Card className="border-0 bg-white/5">
+      <Card className="border-0 bg-background/50">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-white mb-1">Account Settings</h3>
-              <p className="text-sm text-gray-400 font-light">Manage your preferences and data</p>
+              <h3 className="font-medium text-foreground mb-1">Account Settings</h3>
+              <p className="text-sm text-muted-foreground font-light">Manage your preferences and data</p>
             </div>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+            <Button variant="outline" className="border-border/50 text-foreground hover:bg-accent">
               Settings
             </Button>
           </div>

@@ -165,7 +165,7 @@ export function GoalsSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-mcs-blue" />
-          <h2 className="text-xl font-medium text-white">Health Goals</h2>
+          <h2 className="text-xl font-medium text-foreground">Health Goals</h2>
           {goals.length > 0 && (
             <Badge className="bg-mcs-blue/20 text-mcs-blue border-mcs-blue/50">{activeGoals.length} active</Badge>
           )}
@@ -180,7 +180,7 @@ export function GoalsSection() {
           </DialogTrigger>
           <DialogContent className="glass-card max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-white">Create Health Goal</DialogTitle>
+              <DialogTitle className="text-foreground">Create Health Goal</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 pt-4">
@@ -337,7 +337,7 @@ export function GoalsSection() {
         <Card className="border-0 bg-white/5">
           <CardContent className="p-8 text-center">
             <Target className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No Health Goals Yet</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2">No Health Goals Yet</h3>
             <p className="text-gray-400 font-light mb-4">
               Set your first health goal to start tracking your progress and receive helpful reminders.
             </p>
@@ -364,7 +364,7 @@ export function GoalsSection() {
                         {categoryInfo.icon}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-medium text-white mb-1">{goal.title}</h3>
+                        <h3 className="font-medium text-foreground mb-1">{goal.title}</h3>
                         <p className="text-sm text-gray-400 font-light mb-2">{goal.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge className={getStatusColor(goal.status)}>
@@ -405,20 +405,20 @@ export function GoalsSection() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Progress</span>
-                      <span className="text-white font-medium">{Math.round(goal.progress)}%</span>
+                      <span className="text-foreground font-medium">{Math.round(goal.progress)}%</span>
                     </div>
                     <Progress value={goal.progress} className="h-2" />
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-400">Current: </span>
-                        <span className="text-white">
+                        <span className="text-foreground">
                           {goal.currentValue || 0} {goal.unit}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-400">Target: </span>
-                        <span className="text-white">
+                        <span className="text-foreground">
                           {goal.targetValue} {goal.unit}
                         </span>
                       </div>
@@ -449,13 +449,13 @@ export function GoalsSection() {
       <Dialog open={isCheckInDialogOpen} onOpenChange={setIsCheckInDialogOpen}>
         <DialogContent className="glass-card max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">Progress Check-in</DialogTitle>
+            <DialogTitle className="text-foreground">Progress Check-in</DialogTitle>
           </DialogHeader>
 
           {selectedGoal && (
             <div className="space-y-4 pt-4">
               <div className="text-center">
-                <h3 className="font-medium text-white mb-1">{selectedGoal.title}</h3>
+                <h3 className="font-medium text-foreground mb-1">{selectedGoal.title}</h3>
                 <p className="text-sm text-gray-400">How are you progressing with your goal?</p>
               </div>
 

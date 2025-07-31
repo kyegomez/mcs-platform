@@ -36,18 +36,18 @@ export default function ChatIndexPage() {
       <div className="max-w-4xl mx-auto space-y-6 px-4">
         {/* Simple Header */}
         <header className="text-center pt-8 pb-4">
-          <h1 className="text-3xl font-light text-white mb-2">Choose a Specialist</h1>
-          <p className="text-gray-400 font-light">Get expert medical advice instantly</p>
+          <h1 className="text-3xl font-light text-foreground mb-2">Choose a Specialist</h1>
+          <p className="text-muted-foreground font-light">Get expert medical advice instantly</p>
         </header>
 
         {/* Simple Search */}
         <div className="relative max-w-md mx-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search specialists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400"
+            className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary focus-visible:border-primary/50 rounded-xl text-foreground placeholder:text-muted-foreground"
             aria-label="Search medical specialists"
           />
         </div>
@@ -63,7 +63,7 @@ export default function ChatIndexPage() {
               href={`/chat/${agent.id}`}
               aria-label={`Consult with ${agent.name}, ${agent.specialty} specialist`}
             >
-              <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 transition-all duration-200 h-full">
+              <Card className="group cursor-pointer border-0 bg-background/50 hover:bg-accent transition-all duration-200 h-full">
                 <CardContent className="p-6">
                   <article className="flex items-start gap-4">
                     <div
@@ -75,11 +75,11 @@ export default function ChatIndexPage() {
                       <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="md" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h2 className="font-medium text-white group-hover:text-mcs-blue transition-colors mb-1">
+                      <h2 className="font-medium text-foreground group-hover:text-primary transition-colors mb-1">
                         {agent.name}
                       </h2>
-                      <p className="text-sm text-gray-400 font-light mb-2">{agent.specialty}</p>
-                      <p className="text-xs text-gray-500 font-light line-clamp-2">{agent.description}</p>
+                      <p className="text-sm text-muted-foreground font-light mb-2">{agent.specialty}</p>
+                      <p className="text-xs text-muted-foreground/70 font-light line-clamp-2">{agent.description}</p>
                     </div>
                   </article>
                 </CardContent>
@@ -90,7 +90,7 @@ export default function ChatIndexPage() {
 
         {filteredAgents.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 font-light">No specialists found</p>
+            <p className="text-muted-foreground font-light">No specialists found</p>
           </div>
         )}
       </div>

@@ -4,8 +4,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { MessageSquare, FileText, Activity, User, Command, DollarSign, Menu, X } from "lucide-react"
+import { MessageSquare, FileText, Activity, User, Command, DollarSign, Menu, X, Info, Settings, Bell, Search, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const Navigation = () => {
   const pathname = usePathname()
@@ -27,16 +35,6 @@ const Navigation = () => {
       name: "Notes",
       path: "/notes",
       icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      name: "Pricing",
-      path: "/pricing",
-      icon: <DollarSign className="h-5 w-5" />,
-    },
-    {
-      name: "Account",
-      path: "/account",
-      icon: <User className="h-5 w-5" />,
     },
   ]
 
@@ -65,18 +63,18 @@ const Navigation = () => {
         className={cn(
           "sticky top-0 z-50 w-full transition-all duration-300 ease-out",
           isScrolled
-            ? "bg-black/90 backdrop-blur-xl border-b border-white/20 shadow-lg"
-            : "bg-black/80 backdrop-blur-xl border-b border-white/10",
+            ? "bg-background/90 backdrop-blur-xl border-b border-border/20 shadow-lg"
+            : "bg-background/80 backdrop-blur-xl border-b border-border/10",
         )}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mcs-blue to-mcs-blue-light flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-active:scale-95">
-                <Activity className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-active:scale-95">
+                <Activity className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-medium text-xl text-white transition-colors duration-200 group-hover:text-mcs-blue">
+              <span className="font-medium text-xl text-foreground transition-colors duration-200 group-hover:text-primary">
                 MCS
               </span>
             </Link>
@@ -90,8 +88,8 @@ const Navigation = () => {
                   className={cn(
                     "flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 btn-interactive",
                     pathname === route.path
-                      ? "bg-mcs-blue/20 text-mcs-blue shadow-lg"
-                      : "text-gray-400 hover:text-white hover:bg-white/10",
+                      ? "bg-primary/20 text-primary shadow-lg"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
                   )}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
@@ -100,23 +98,123 @@ const Navigation = () => {
                 </Link>
               ))}
 
+
+            </nav>
+
+            {/* Right Side - User Menu Dropdown */}
+            <div className="flex items-center gap-2">
               {/* Command Palette Hint */}
-              <div className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-xs text-gray-400 bg-white/5 rounded-lg ml-4 transition-all duration-200 hover:bg-white/10">
+              <div className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground bg-accent/50 rounded-lg transition-all duration-200 hover:bg-accent">
                 <Command className="h-3 w-3" />
                 <span>+</span>
-                <kbd className="px-1 py-0.5 bg-white/10 rounded text-xs">K</kbd>
+                <kbd className="px-1 py-0.5 bg-background/50 rounded text-xs">K</kbd>
               </div>
-            </nav>
+
+              {/* User Menu Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-background/80 transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-foreground">Account</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-64 p-2 bg-background/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl"
+                >
+                  {/* User Info Section */}
+                  <div className="px-3 py-2 mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">Welcome back!</p>
+                        <p className="text-xs text-muted-foreground">Manage your account</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DropdownMenuSeparator className="bg-border/50" />
+
+                  {/* Quick Actions */}
+                  <Link href="/chat">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Search</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <Link href="/alerts">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors relative">
+                      <Bell className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Notifications</span>
+                      <span className="absolute right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <DropdownMenuSeparator className="bg-border/50" />
+
+                  {/* Account Section */}
+                  <Link href="/account">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Account Settings</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <Link href="/account">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <Settings className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Preferences</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <DropdownMenuSeparator className="bg-border/50" />
+
+                  {/* Additional Pages */}
+                  <Link href="/about">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">About</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <Link href="/pricing">
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Pricing</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <DropdownMenuSeparator className="bg-border/50" />
+
+                  {/* Theme Toggle */}
+                  <div className="px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-foreground">Theme</span>
+                      <ThemeToggle />
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-gray-400 hover:text-white hover:bg-white/10 rounded-xl btn-interactive"
+                className="md:hidden text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl btn-interactive"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -124,10 +222,10 @@ const Navigation = () => {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" />
           <div
             className={cn(
-              "fixed top-16 left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 p-4",
+              "fixed top-16 left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border/10 p-4",
               "animate-in slide-in-from-top-2 duration-300",
             )}
             onClick={(e) => e.stopPropagation()}
@@ -141,8 +239,8 @@ const Navigation = () => {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 btn-mobile stagger-item",
                     pathname === route.path
-                      ? "bg-mcs-blue/20 text-mcs-blue"
-                      : "text-gray-300 hover:text-white hover:bg-white/10",
+                      ? "bg-primary/20 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
                   )}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >

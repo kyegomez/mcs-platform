@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-const DEFAULT_MODEL = "claude-3-5-sonnet-20240620"
+const DEFAULT_MODEL = "claude-sonnet-4-20250514"
 const STORAGE_KEY = "selected-ai-model"
 
 export function useModelSelection() {

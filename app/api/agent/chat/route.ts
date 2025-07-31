@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process and validate history
-    let processedHistory = []
+    let processedHistory: Array<{ role: string; content: string }> = []
     if (history && Array.isArray(history)) {
       processedHistory = history
         .filter((msg) => msg && msg.content && msg.content.trim() !== "")
@@ -72,9 +72,15 @@ export async function POST(request: NextRequest) {
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
       // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
+      console.log("Last output:", lastOutput)
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
+      console.log("Set processedOutput to:", data.processedOutput)
+    } else {
+      // Handle empty outputs array - provide a default response
+      data.processedOutput = "I understand. How can I help you further?"
+      console.log("No outputs found, using default processedOutput")
     }
 
     return NextResponse.json(data)

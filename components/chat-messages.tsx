@@ -44,8 +44,8 @@ export function ChatMessages({ messages = [], agent, isLoading = false }: ChatMe
           >
             <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Start a conversation with {agent.name}</h3>
-          <p className="text-gray-400 max-w-md">{agent.description}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Start a conversation with {agent.name}</h3>
+          <p className="text-muted-foreground max-w-md">{agent.description}</p>
         </div>
       ) : (
         <>
@@ -68,8 +68,8 @@ export function ChatMessages({ messages = [], agent, isLoading = false }: ChatMe
               <div
                 className={`max-w-[70%] rounded-lg p-3 ${
                   message.role === "user"
-                    ? "bg-gradient-to-r from-mcs-blue to-mcs-blue-light text-white ml-auto"
-                    : "glass-card border-white/10 text-white"
+                    ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground ml-auto"
+                    : "glass-card border-border/20 text-foreground"
                 }`}
               >
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -83,9 +83,9 @@ export function ChatMessages({ messages = [], agent, isLoading = false }: ChatMe
 
               {message.role === "user" && (
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-mcs-blue to-mcs-blue-light rounded-xl flex items-center justify-center">
-                    <span className="text-xs font-semibold text-white">U</span>
-                  </div>
+                                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
+                  <span className="text-xs font-semibold text-primary-foreground">U</span>
+                </div>
                 </div>
               )}
             </div>

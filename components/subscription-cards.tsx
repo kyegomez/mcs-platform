@@ -80,8 +80,8 @@ export function SubscriptionCards() {
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-light text-white mb-2">Your Subscription</h2>
-          <p className="text-gray-400 font-light">Loading...</p>
+                  <h2 className="text-xl sm:text-2xl font-light text-foreground mb-2">Your Subscription</h2>
+        <p className="text-muted-foreground font-light">Loading...</p>
         </div>
       </div>
     )
@@ -90,8 +90,8 @@ export function SubscriptionCards() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-light text-white mb-2">Your Subscription</h2>
-        <p className="text-gray-400 font-light">Manage your plan and billing</p>
+        <h2 className="text-xl sm:text-2xl font-light text-foreground mb-2">Your Subscription</h2>
+        <p className="text-muted-foreground font-light">Manage your plan and billing</p>
       </div>
 
       {/* Current Plan Status */}
@@ -105,8 +105,8 @@ export function SubscriptionCards() {
                 {subscription.tier === "family" && <Users className="w-6 h-6 text-mcs-blue" />}
               </div>
               <div>
-                <h3 className="text-xl font-medium text-white capitalize">{subscription.tier} Plan</h3>
-                <p className="text-gray-400 text-sm">
+                        <h3 className="text-xl font-medium text-foreground capitalize">{subscription.tier} Plan</h3>
+        <p className="text-muted-foreground text-sm">
                   {subscription.tier === "free" && "Basic health assistance"}
                   {subscription.tier === "premium" && "Full access to all specialists"}
                   {subscription.tier === "family" && "Complete family health coverage"}
@@ -119,8 +119,8 @@ export function SubscriptionCards() {
           {subscription.tier === "free" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-300">Conversations this month</span>
-                <span className="text-white">
+                          <span className="text-muted-foreground">Conversations this month</span>
+          <span className="text-foreground">
                   {subscription.conversationsUsed} / {subscription.conversationsLimit}
                 </span>
               </div>
@@ -134,7 +134,7 @@ export function SubscriptionCards() {
           )}
 
           {subscription.renewalDate && (
-            <div className="flex items-center gap-2 text-sm text-gray-400 mt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
               <Calendar className="w-4 h-4" />
               <span>
                 Renews on {formatRenewalDate(subscription.renewalDate)} ({subscription.billingCycle || "monthly"})
@@ -145,7 +145,7 @@ export function SubscriptionCards() {
       </Card>
 
       {/* Plan Options */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Free Plan */}
         <Card
           className={`border-0 transition-all duration-200 ${
@@ -154,29 +154,29 @@ export function SubscriptionCards() {
         >
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white font-medium">Free</CardTitle>
-              {subscription.tier === "free" && <Badge className="bg-mcs-blue text-white text-xs">Current</Badge>}
+                      <CardTitle className="text-foreground font-medium">Free</CardTitle>
+        {subscription.tier === "free" && <Badge className="bg-primary text-primary-foreground text-xs">Current</Badge>}
             </div>
-            <div className="text-3xl font-light text-white">$0</div>
-            <p className="text-gray-400 text-sm">Perfect for getting started</p>
+                          <div className="text-3xl font-light text-foreground">$0</div>
+              <p className="text-muted-foreground text-sm">Perfect for getting started</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">15 conversations/month</span>
+                <span className="text-muted-foreground">15 conversations/month</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Basic health tracking</span>
+                <span className="text-muted-foreground">Basic health tracking</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Notes and reminders</span>
+                <span className="text-muted-foreground">Notes and reminders</span>
               </div>
             </div>
             {subscription.tier !== "free" && (
-              <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10" disabled>
+              <Button variant="outline" className="w-full border-border/50 text-foreground hover:bg-accent" disabled>
                 Downgrade to Free
               </Button>
             )}
@@ -192,44 +192,44 @@ export function SubscriptionCards() {
           }`}
         >
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1">
+            <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-primary-foreground px-3 py-1">
               <Star className="w-3 h-3 mr-1" />
               Most Popular
             </Badge>
           </div>
           <CardHeader className="pb-4 pt-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white font-medium">Premium</CardTitle>
-              {subscription.tier === "premium" && <Badge className="bg-mcs-blue text-white text-xs">Current</Badge>}
+                      <CardTitle className="text-foreground font-medium">Premium</CardTitle>
+        {subscription.tier === "premium" && <Badge className="bg-primary text-primary-foreground text-xs">Current</Badge>}
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-light text-white">${isAnnual ? "79" : "7.99"}</span>
-              <span className="text-gray-400 text-sm">/{isAnnual ? "year" : "month"}</span>
+                              <span className="text-3xl font-light text-foreground">${isAnnual ? "79" : "7.99"}</span>
+                <span className="text-muted-foreground text-sm">/{isAnnual ? "year" : "month"}</span>
             </div>
             {isAnnual && <p className="text-green-400 text-sm">Save 17% annually</p>}
-            <p className="text-gray-400 text-sm">Complete health assistance</p>
+                          <p className="text-muted-foreground text-sm">Complete health assistance</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Unlimited conversations</span>
+                <span className="text-muted-foreground">Unlimited conversations</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">All AI specialists</span>
+                <span className="text-muted-foreground">All AI specialists</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Advanced health analytics</span>
+                <span className="text-muted-foreground">Advanced health analytics</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Priority support</span>
+                <span className="text-muted-foreground">Priority support</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Voice input</span>
+                <span className="text-muted-foreground">Voice input</span>
               </div>
             </div>
             {subscription.tier === "premium" ? (
@@ -244,7 +244,7 @@ export function SubscriptionCards() {
             ) : (
               <Button
                 onClick={() => handleUpgrade("premium")}
-                className="w-full bg-mcs-blue hover:bg-mcs-blue/80 text-white"
+                className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 Upgrade to Premium
@@ -261,37 +261,37 @@ export function SubscriptionCards() {
         >
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white font-medium">Family</CardTitle>
-              {subscription.tier === "family" && <Badge className="bg-mcs-blue text-white text-xs">Current</Badge>}
+                      <CardTitle className="text-foreground font-medium">Family</CardTitle>
+        {subscription.tier === "family" && <Badge className="bg-primary text-primary-foreground text-xs">Current</Badge>}
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-light text-white">${isAnnual ? "129" : "12.99"}</span>
-              <span className="text-gray-400 text-sm">/{isAnnual ? "year" : "month"}</span>
+                              <span className="text-3xl font-light text-foreground">${isAnnual ? "129" : "12.99"}</span>
+                <span className="text-muted-foreground text-sm">/{isAnnual ? "year" : "month"}</span>
             </div>
             <p className="text-green-400 text-sm">Just ${isAnnual ? "$21.50" : "$2.16"}/person/month</p>
-            <p className="text-gray-400 text-sm">Health coverage for everyone</p>
+                          <p className="text-muted-foreground text-sm">Health coverage for everyone</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Up to 6 family members</span>
+                <span className="text-muted-foreground">Up to 6 family members</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">All Premium features</span>
+                <span className="text-muted-foreground">All Premium features</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Family health dashboard</span>
+                <span className="text-muted-foreground">Family health dashboard</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Shared health goals</span>
+                <span className="text-muted-foreground">Shared health goals</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Priority family support</span>
+                <span className="text-muted-foreground">Priority family support</span>
               </div>
             </div>
             {subscription.tier === "family" ? (
@@ -306,7 +306,7 @@ export function SubscriptionCards() {
             ) : (
               <Button
                 onClick={() => handleUpgrade("family")}
-                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-primary-foreground"
               >
                 <Users className="w-4 h-4 mr-2" />
                 Upgrade to Family
@@ -318,7 +318,7 @@ export function SubscriptionCards() {
 
       {/* Billing Toggle */}
       <div className="flex items-center justify-center gap-4">
-        <span className={`text-sm ${!isAnnual ? "text-white" : "text-gray-400"}`}>Monthly</span>
+                    <span className={`text-sm ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
         <button
           onClick={() => setIsAnnual(!isAnnual)}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -331,7 +331,7 @@ export function SubscriptionCards() {
             }`}
           />
         </button>
-        <span className={`text-sm ${isAnnual ? "text-white" : "text-gray-400"}`}>Annual</span>
+                    <span className={`text-sm ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Annual</span>
         {isAnnual && (
           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Save up to 20%</Badge>
         )}
@@ -340,12 +340,12 @@ export function SubscriptionCards() {
       {/* Additional Actions */}
       <div className="flex items-center justify-center gap-4">
         <Link href="/pricing">
-          <Button variant="ghost" className="text-gray-400 hover:text-white">
-            View Full Pricing Details
-          </Button>
+                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+          View Full Pricing Details
+        </Button>
         </Link>
         {subscription.tier !== "free" && (
-          <Button variant="ghost" className="text-gray-400 hover:text-white">
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
             <Shield className="w-4 h-4 mr-2" />
             Manage Billing
           </Button>

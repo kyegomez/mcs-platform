@@ -277,7 +277,7 @@ export function VoiceProcessor({
             "rounded-xl transition-all duration-300 relative overflow-hidden",
             isListening
               ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-              : "text-gray-400 hover:text-white hover:bg-white/10",
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent",
           )}
           disabled={isSpeaking}
         >
@@ -341,7 +341,7 @@ export function VoiceProcessor({
         onClick={toggleSpeech}
         className={cn(
           "rounded-xl transition-all duration-200",
-          speechEnabled ? "text-mcs-blue hover:bg-mcs-blue/20" : "text-gray-500 hover:bg-gray-500/20",
+                      speechEnabled ? "text-primary hover:bg-primary/20" : "text-muted-foreground/70 hover:bg-muted/20",
         )}
         disabled={isListening}
       >

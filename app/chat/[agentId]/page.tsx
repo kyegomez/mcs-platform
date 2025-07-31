@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { agents } from "@/data/agents"
 import type { ChatMessage } from "@/types/agent"
-import { streamChatWithAgent } from "@/lib/swarms-api"
+import { chatWithAgent } from "@/lib/swarms-api"
 import { v4 as uuidv4 } from "uuid"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,7 +27,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [currentStreamingMessage, setCurrentStreamingMessage] = useState("")
+
   const [error, setError] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [speakResponse, setSpeakResponse] = useState<((text: string) => void) | null>(null)
@@ -69,7 +69,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages, currentStreamingMessage])
+  }, [messages])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -100,7 +100,6 @@ export default function ChatPage() {
     const currentInput = input
     setInput("")
     setIsLoading(true)
-    setCurrentStreamingMessage("")
 
     try {
       // Create history array with all previous messages
@@ -114,19 +113,32 @@ export default function ChatPage() {
       console.log("History being sent:", historyForApi)
       console.log("Current user input:", currentInput)
 
+      // Use the regular chat endpoint instead of streaming
+      const response = await chatWithAgent(agent, currentInput, historyForApi, selectedModel)
+      
+      console.log("=== RESPONSE DEBUG ===")
+      console.log("Full response:", response)
+      console.log("Response outputs:", response?.outputs)
+      console.log("Response processedOutput:", response?.processedOutput)
+      
+      // Extract the response content
       let fullResponse = ""
-
-      // Pass the history along with the current message
-      await streamChatWithAgent(
-        agent,
-        currentInput,
-        historyForApi,
-        (chunk) => {
-          fullResponse += chunk
-          setCurrentStreamingMessage(fullResponse)
-        },
-        selectedModel,
-      )
+      if (typeof response === "string") {
+        // If response is already a string (the AI response), use it directly
+        fullResponse = response
+        console.log("Using direct string response:", fullResponse)
+      } else if (response && response.outputs && response.outputs.length > 0) {
+        const lastOutput = response.outputs[response.outputs.length - 1]
+        console.log("Last output:", lastOutput)
+        fullResponse = lastOutput.content || ""
+        console.log("Extracted content:", fullResponse)
+      } else if (response && response.processedOutput) {
+        fullResponse = response.processedOutput
+        console.log("Using processedOutput:", fullResponse)
+      } else {
+        fullResponse = "I processed your request, but didn't receive a response. Please try again."
+        console.log("Using fallback message")
+      }
 
       // Create the assistant message with the full response
       const assistantMessage: ChatMessage = {
@@ -138,7 +150,6 @@ export default function ChatPage() {
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-      setCurrentStreamingMessage("")
 
       // Speak the response if voice is enabled
       if (speakResponse && fullResponse) {
@@ -161,7 +172,6 @@ export default function ChatPage() {
       }
 
       setMessages((prev) => [...prev, errorMessage])
-      setCurrentStreamingMessage("")
     } finally {
       setIsLoading(false)
     }
@@ -205,7 +215,7 @@ export default function ChatPage() {
               variant="ghost"
               size="icon"
               onClick={() => router.push("/chat")}
-              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl btn-interactive flex-shrink-0"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl btn-interactive flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -224,7 +234,7 @@ export default function ChatPage() {
                 <div className="absolute -bottom-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 rounded-full status-online border-2 border-black"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-lg sm:text-xl text-white truncate">{agent.name}</h1>
+                <h1 className="font-bold text-lg sm:text-xl text-foreground truncate">{agent.name}</h1>
                 <p className="text-xs sm:text-sm text-mcs-blue truncate">{agent.specialty}</p>
               </div>
             </div>
@@ -243,7 +253,7 @@ export default function ChatPage() {
               variant="ghost"
               size="sm"
               onClick={clearChatHistory}
-              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl btn-interactive text-xs sm:text-sm px-2 sm:px-3"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl btn-interactive text-xs sm:text-sm px-2 sm:px-3"
             >
               <Trash2 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Clear</span>
@@ -290,7 +300,7 @@ export default function ChatPage() {
                 }
               >
                 {message.role === "user" ? (
-                  <User className="h-4 w-4 text-white" />
+                  <User className="h-4 w-4 text-foreground" />
                 ) : (
                   <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
                 )}
@@ -305,56 +315,19 @@ export default function ChatPage() {
                     : "border-white/10"
                 }`}
               >
-                <div className="whitespace-pre-wrap text-white leading-relaxed">{message.content}</div>
+                <div className="whitespace-pre-wrap text-foreground leading-relaxed">{message.content}</div>
               </div>
-              <div className="text-xs text-gray-500 mt-2 px-2">
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
+                              <div className="text-xs text-muted-foreground/70 mt-2 px-2">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
             </div>
           </div>
         ))}
 
-        {currentStreamingMessage && (
-          <div className="flex gap-4 chat-bubble-animation">
-            <div className="flex-shrink-0">
-              <div
-                className="h-8 w-8 rounded-xl flex items-center justify-center border"
-                style={{
-                  borderColor: agent.iconColor + "30",
-                  backgroundColor: agent.iconColor + "10",
-                }}
-              >
-                <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
-              </div>
-            </div>
 
-            <div className="max-w-[80%]">
-              <div className="glass-card p-4 rounded-2xl border-white/10">
-                <div className="whitespace-pre-wrap text-white leading-relaxed">{currentStreamingMessage}</div>
-                <div className="flex items-center gap-1 mt-2">
-                  <div className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"></div>
-                  <div
-                    className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"
-                    style={{ animationDelay: "0.2s" }}
-                  ></div>
-                  <div
-                    className="h-1 w-1 bg-mcs-blue rounded-full animate-pulse"
-                    style={{ animationDelay: "0.4s" }}
-                  ></div>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 mt-2 px-2">
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         <div ref={messagesEndRef} />
       </div>
@@ -366,7 +339,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message or use voice input..."
-            className="resize-none bg-white/5 border-white/10 focus-visible:ring-mcs-blue focus-visible:border-mcs-blue/50 rounded-xl text-white placeholder:text-gray-400 text-sm sm:text-base focus-smooth"
+            className="resize-none bg-background/50 border-border/50 focus-visible:ring-primary focus-visible:border-primary/50 rounded-xl text-foreground placeholder:text-muted-foreground text-sm sm:text-base focus-smooth"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

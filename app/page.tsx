@@ -130,11 +130,24 @@ export default function Dashboard() {
         <header className="text-center pt-8 pb-4 spring-bounce">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="h-8 w-8 text-mcs-blue animate-pulse" />
-            <h1 className="text-4xl sm:text-5xl font-light text-white">Health</h1>
+            <h1 className="text-4xl sm:text-5xl font-light text-foreground">Health</h1>
           </div>
-          <p className="text-gray-400 text-lg sm:text-xl font-light max-w-2xl mx-auto">
+                      <p className="text-muted-foreground text-lg sm:text-xl font-light max-w-2xl mx-auto mb-6">
             Your personal healthcare assistant powered by AI
           </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/chat">
+              <Button className="px-6 py-2 bg-mcs-blue hover:bg-mcs-blue-light">
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/about">
+              <Button variant="outline" className="px-6 py-2 border-gray-400 text-gray-300 hover:bg-white/10">
+                Learn More
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {/* Main Actions - Enhanced for mobile */}
@@ -145,8 +158,8 @@ export default function Dashboard() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
                   <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-mcs-blue" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-medium text-white mb-2 sm:mb-3">Talk to a Specialist</h2>
-                <p className="text-gray-400 font-light text-sm sm:text-base">
+                <h2 className="text-xl sm:text-2xl font-medium text-foreground mb-2 sm:mb-3">Talk to a Specialist</h2>
+                <p className="text-muted-foreground font-light text-sm sm:text-base">
                   Get instant medical advice from AI specialists
                 </p>
               </CardContent>
@@ -159,8 +172,8 @@ export default function Dashboard() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
                   <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-green-400" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-medium text-white mb-2 sm:mb-3">Health Journal</h2>
-                <p className="text-gray-400 font-light text-sm sm:text-base">
+                <h2 className="text-xl sm:text-2xl font-medium text-foreground mb-2 sm:mb-3">Health Journal</h2>
+                <p className="text-muted-foreground font-light text-sm sm:text-base">
                   {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey"}
                 </p>
               </CardContent>
@@ -172,7 +185,7 @@ export default function Dashboard() {
         {recentActivity.length > 0 && (
           <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Recent Activity">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-medium text-white">Recent</h2>
+              <h2 className="text-xl sm:text-2xl font-medium text-foreground">Recent</h2>
               <Link href="/chat">
                 <Button
                   variant="ghost"
@@ -203,7 +216,7 @@ export default function Dashboard() {
                           <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white group-hover:text-mcs-blue transition-colors text-sm sm:text-base">
+                          <p className="font-medium text-foreground group-hover:text-primary transition-colors text-sm sm:text-base">
                             {activity.agentName}
                           </p>
                           <p className="text-sm text-gray-400 font-light truncate">{activity.specialty}</p>
@@ -225,7 +238,7 @@ export default function Dashboard() {
 
         {/* Featured Specialists - Mobile-optimized grid */}
         <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Medical Specialists">
-          <h2 className="text-xl sm:text-2xl font-medium text-white">Specialists</h2>
+                      <h2 className="text-xl sm:text-2xl font-medium text-foreground">Specialists</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {agents.slice(0, 8).map((agent, index) => (
               <Link
@@ -245,7 +258,7 @@ export default function Dashboard() {
                     >
                       <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
                     </div>
-                    <h3 className="font-medium text-white text-xs sm:text-sm mb-1 group-hover:text-mcs-blue transition-colors line-clamp-1">
+                    <h3 className="font-medium text-foreground text-xs sm:text-sm mb-1 group-hover:text-primary transition-colors line-clamp-1">
                       {agent.name}
                     </h3>
                     <p className="text-xs text-gray-400 font-light line-clamp-2">{agent.specialty}</p>

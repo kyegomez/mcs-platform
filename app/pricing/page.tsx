@@ -18,9 +18,9 @@ export default function PricingPage() {
       price: { monthly: 0, annual: 0 },
       badge: null,
       icon: Heart,
-      iconColor: "text-gray-400",
-      cardStyle: "border-0 bg-white/5 hover:bg-white/8",
-      buttonStyle: "border-white/20 text-white hover:bg-white/10",
+      iconColor: "text-muted-foreground",
+      cardStyle: "border-0 bg-background/50 hover:bg-background/80",
+      buttonStyle: "border-border/50 text-foreground hover:bg-accent",
       buttonText: "Get Started Free",
       popular: false,
       features: [
@@ -45,9 +45,9 @@ export default function PricingPage() {
       badge: "Most Popular",
       icon: Sparkles,
       iconColor: "text-mcs-blue",
-      cardStyle:
-        "border-2 border-mcs-blue bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/15 hover:to-mcs-blue/10",
-      buttonStyle: "bg-mcs-blue text-white hover:bg-mcs-blue/90",
+              cardStyle:
+          "border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10",
+      buttonStyle: "bg-primary text-primary-foreground hover:bg-primary/90",
       buttonText: "Start Free Trial",
       popular: true,
       features: [
@@ -75,7 +75,7 @@ export default function PricingPage() {
       cardStyle:
         "border-0 bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/15 hover:to-purple-500/10",
       buttonStyle:
-        "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700",
+        "bg-gradient-to-r from-purple-500 to-purple-600 text-primary-foreground hover:from-purple-600 hover:to-purple-700",
       buttonText: "Start Family Plan",
       popular: false,
       features: [
@@ -116,21 +116,21 @@ export default function PricingPage() {
       <div className="max-w-7xl mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-light text-white mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-foreground mb-6">
             Choose Your
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-mcs-blue to-purple-400">
               Health Plan
             </span>
           </h1>
-          <p className="text-xl text-gray-400 font-light max-w-2xl mx-auto mb-8">
+                      <p className="text-lg sm:text-xl text-muted-foreground font-light max-w-2xl mx-auto mb-8">
             Start free, upgrade when you're ready. Cancel anytime.
           </p>
 
           {/* Annual/Monthly Toggle */}
           <div className="flex items-center justify-center gap-4 mb-4">
-            <span className={`text-sm font-medium ${!isAnnual ? "text-white" : "text-gray-400"}`}>Monthly</span>
+                          <span className={`text-sm font-medium ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
             <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="data-[state=checked]:bg-mcs-blue" />
-            <span className={`text-sm font-medium ${isAnnual ? "text-white" : "text-gray-400"}`}>Annual</span>
+                          <span className={`text-sm font-medium ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Annual</span>
             {isAnnual && (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Save up to 20%</Badge>
             )}
@@ -138,7 +138,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-16">
           {plans.map((plan) => {
             const IconComponent = plan.icon
             const savings = getSavings(plan)
@@ -150,7 +150,7 @@ export default function PricingPage() {
               >
                 {plan.popular && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-mcs-blue to-purple-500 p-3 text-center">
-                    <p className="text-white text-sm font-medium flex items-center justify-center gap-1">
+                    <p className="text-foreground text-sm font-medium flex items-center justify-center gap-1">
                       <Star className="h-4 w-4" />
                       {plan.badge}
                     </p>
@@ -172,15 +172,15 @@ export default function PricingPage() {
                       <IconComponent className={`h-8 w-8 ${plan.iconColor}`} />
                     </div>
 
-                    <h3 className="text-2xl font-semibold text-white mb-2">{plan.name}</h3>
-                    <p className="text-gray-400 font-light mb-4">{plan.description}</p>
+                                  <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">{plan.name}</h3>
+              <p className="text-muted-foreground font-light mb-4">{plan.description}</p>
 
                     {/* Price */}
                     <div className="mb-2">
-                      <span className="text-4xl font-light text-white">{getPrice(plan)}</span>
-                      {plan.price.monthly > 0 && (
-                        <span className="text-gray-400 text-sm ml-1">{isAnnual ? "/year" : "/month"}</span>
-                      )}
+                                      <span className="text-3xl sm:text-4xl font-light text-foreground">{getPrice(plan)}</span>
+                {plan.price.monthly > 0 && (
+                  <span className="text-muted-foreground text-sm ml-1">{isAnnual ? "/year" : "/month"}</span>
+                )}
                     </div>
 
                     {/* Savings Badge */}
@@ -192,7 +192,7 @@ export default function PricingPage() {
 
                     {/* Family Plan Value */}
                     {plan.name === "Family" && (
-                      <p className="text-xs text-gray-400 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Just ${(isAnnual ? plan.price.annual / 12 : plan.price.monthly) / 6}/month per person
                       </p>
                     )}
@@ -220,14 +220,14 @@ export default function PricingPage() {
                             className={`text-sm ${
                               feature.included
                                 ? feature.highlight
-                                  ? "text-white font-medium"
-                                  : "text-gray-300"
-                                : "text-gray-500"
+                                                  ? "text-foreground font-medium"
+                : "text-muted-foreground"
+                : "text-muted-foreground/70"
                             }`}
                           >
                             {feature.text}
                           </span>
-                          {feature.limited && <div className="text-xs text-gray-400 mt-1">{feature.limited}</div>}
+                          {feature.limited && <div className="text-xs text-muted-foreground mt-1">{feature.limited}</div>}
                         </div>
                       </div>
                     ))}
@@ -240,22 +240,22 @@ export default function PricingPage() {
 
         {/* Trust Indicators */}
         <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-8 mb-8 flex-wrap">
-            <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8 flex-wrap">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Shield className="h-5 w-5" />
               <span className="text-sm">HIPAA Compliant</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Zap className="h-5 w-5" />
               <span className="text-sm">Instant Access</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Crown className="h-5 w-5" />
               <span className="text-sm">Cancel Anytime</span>
             </div>
           </div>
 
-          <p className="text-gray-500 text-sm max-w-2xl mx-auto">
+          <p className="text-muted-foreground/70 text-sm max-w-2xl mx-auto">
             All plans include bank-level security, 24/7 availability, and seamless sync across all your devices. Your
             health data stays private and secure, always.
           </p>
@@ -263,7 +263,7 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-light text-white text-center mb-12">Frequently Asked Questions</h2>
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground text-center mb-12">Frequently Asked Questions</h2>
 
           <div className="space-y-6">
             {[
@@ -293,10 +293,10 @@ export default function PricingPage() {
                   "Yes! Premium and Family plans come with a 7-day free trial. No credit card required to start, and you can cancel anytime during the trial.",
               },
             ].map((faq, index) => (
-              <Card key={index} className="border-0 bg-white/5">
+              <Card key={index} className="border-0 bg-background/50">
                 <CardContent className="p-6">
-                  <h3 className="text-white font-medium mb-2">{faq.question}</h3>
-                  <p className="text-gray-400 font-light">{faq.answer}</p>
+                  <h3 className="text-foreground font-medium mb-2">{faq.question}</h3>
+                  <p className="text-muted-foreground font-light">{faq.answer}</p>
                 </CardContent>
               </Card>
             ))}
@@ -305,13 +305,13 @@ export default function PricingPage() {
 
         {/* Final CTA */}
         <div className="text-center mt-16">
-          <h2 className="text-3xl font-light text-white mb-4">Ready to Transform Your Health?</h2>
-          <p className="text-gray-400 font-light mb-8 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground mb-4">Ready to Transform Your Health?</h2>
+          <p className="text-muted-foreground font-light mb-8 max-w-xl mx-auto">
             Join thousands of users who are already taking control of their health with AI-powered insights and
             personalized guidance.
           </p>
           <Link href="/chat">
-            <Button size="lg" className="bg-mcs-blue text-white hover:bg-mcs-blue/90 px-8 py-3 text-lg font-medium">
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium">
               Start Your Health Journey
             </Button>
           </Link>

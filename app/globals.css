@@ -4,26 +4,39 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    /* Apple-inspired Light Mode */
+    --background: 0 0% 98%; /* Off-white background */
+    --foreground: 0 0% 9%; /* Dark text */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 217 100% 50%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 210 100% 50%; /* Apple blue */
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
+    --secondary: 0 0% 96%; /* Light gray */
     --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
     --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 217 100% 50%;
+    --border: 0 0% 90%; /* Light borders */
+    --input: 0 0% 90%;
+    --ring: 210 100% 50%;
     --radius: 0.75rem;
+    
+    /* Apple-specific colors */
+    --apple-gray-50: 0 0% 98%;
+    --apple-gray-100: 0 0% 96%;
+    --apple-gray-200: 0 0% 90%;
+    --apple-gray-300: 0 0% 83%;
+    --apple-gray-400: 0 0% 64%;
+    --apple-gray-500: 0 0% 45%;
+    --apple-gray-600: 0 0% 32%;
+    --apple-gray-700: 0 0% 25%;
+    --apple-gray-800: 0 0% 15%;
+    --apple-gray-900: 0 0% 9%;
   }
 
   .dark {
@@ -55,10 +68,21 @@
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+  }
+
+  /* Light mode background */
+  body {
+    background: radial-gradient(ellipse at top, rgba(0, 122, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom, rgba(0, 122, 255, 0.02) 0%, transparent 50%),
+      linear-gradient(180deg, hsl(0, 0%, 98%) 0%, hsl(0, 0%, 96%) 100%);
+  }
+
+  /* Dark mode background */
+  .dark body {
     background: radial-gradient(ellipse at top, rgba(0, 112, 243, 0.03) 0%, transparent 50%),
       radial-gradient(ellipse at bottom, rgba(0, 112, 243, 0.02) 0%, transparent 50%),
       linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
-    min-height: 100vh;
   }
 }
 
@@ -116,6 +140,28 @@
 /* Apple-style spring animations */
 .spring-bounce {
   animation: springBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Apple-inspired design tokens */
+.apple-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.apple-shadow {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dark .apple-shadow {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.apple-border {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .apple-border {
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes springBounce {
@@ -183,14 +229,29 @@
   transform: translateY(-2px) scale(1.01);
 }
 
-/* Glass morphism effect */
+/* Apple-inspired Glass morphism effects */
 .glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.dark .glass-card {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(0, 112, 243, 0.2);
