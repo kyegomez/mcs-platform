@@ -18,9 +18,9 @@ export default function PricingPage() {
       price: { monthly: 0, annual: 0 },
       badge: null,
       icon: Heart,
-      iconColor: "text-muted-foreground",
-      cardStyle: "border-0 bg-background/50 hover:bg-background/80",
-      buttonStyle: "border-border/50 text-foreground hover:bg-accent",
+      iconColor: "text-gray-500",
+      cardStyle: "border border-gray-200 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md",
+      buttonStyle: "border border-gray-300 text-gray-700 hover:bg-gray-100",
       buttonText: "Get Started Free",
       popular: false,
       features: [
@@ -44,10 +44,9 @@ export default function PricingPage() {
       price: { monthly: 7.99, annual: 79.99 },
       badge: "Most Popular",
       icon: Sparkles,
-      iconColor: "text-mcs-blue",
-              cardStyle:
-          "border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10",
-      buttonStyle: "bg-primary text-primary-foreground hover:bg-primary/90",
+      iconColor: "text-blue-600",
+      cardStyle: "border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50 shadow-lg hover:shadow-xl",
+      buttonStyle: "bg-blue-600 text-white hover:bg-blue-700",
       buttonText: "Start Free Trial",
       popular: true,
       features: [
@@ -71,11 +70,9 @@ export default function PricingPage() {
       price: { monthly: 12.99, annual: 129.99 },
       badge: "Best Value",
       icon: Users,
-      iconColor: "text-purple-400",
-      cardStyle:
-        "border-0 bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/15 hover:to-purple-500/10",
-      buttonStyle:
-        "bg-gradient-to-r from-purple-500 to-purple-600 text-primary-foreground hover:from-purple-600 hover:to-purple-700",
+      iconColor: "text-purple-600",
+      cardStyle: "border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50 shadow-sm hover:shadow-md",
+      buttonStyle: "bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800",
       buttonText: "Start Family Plan",
       popular: false,
       features: [
@@ -112,27 +109,27 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-foreground mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900 mb-6">
             Choose Your
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-mcs-blue to-purple-400">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               Health Plan
             </span>
           </h1>
-                      <p className="text-lg sm:text-xl text-muted-foreground font-light max-w-2xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-gray-600 font-light max-w-2xl mx-auto mb-8">
             Start free, upgrade when you're ready. Cancel anytime.
           </p>
 
           {/* Annual/Monthly Toggle */}
           <div className="flex items-center justify-center gap-4 mb-4">
-                          <span className={`text-sm font-medium ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
-            <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="data-[state=checked]:bg-mcs-blue" />
-                          <span className={`text-sm font-medium ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}>Annual</span>
+            <span className={`text-sm font-medium ${!isAnnual ? "text-gray-900" : "text-gray-500"}`}>Monthly</span>
+            <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="data-[state=checked]:bg-blue-600" />
+            <span className={`text-sm font-medium ${isAnnual ? "text-gray-900" : "text-gray-500"}`}>Annual</span>
             {isAnnual && (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Save up to 20%</Badge>
+              <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">Save up to 20%</Badge>
             )}
           </div>
         </div>
@@ -149,8 +146,8 @@ export default function PricingPage() {
                 className={`${plan.cardStyle} transition-all duration-300 transform hover:scale-105 relative overflow-hidden`}
               >
                 {plan.popular && (
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-mcs-blue to-purple-500 p-3 text-center">
-                    <p className="text-foreground text-sm font-medium flex items-center justify-center gap-1">
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-center">
+                    <p className="text-white text-sm font-medium flex items-center justify-center gap-1">
                       <Star className="h-4 w-4" />
                       {plan.badge}
                     </p>
@@ -163,36 +160,36 @@ export default function PricingPage() {
                     <div
                       className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${
                         plan.name === "Free"
-                          ? "from-gray-500/20 to-gray-600/20"
+                          ? "from-gray-200 to-gray-300"
                           : plan.name === "Premium"
-                            ? "from-mcs-blue/20 to-mcs-blue/30"
-                            : "from-purple-500/20 to-purple-600/20"
+                            ? "from-blue-100 to-blue-200"
+                            : "from-purple-100 to-purple-200"
                       } flex items-center justify-center`}
                     >
                       <IconComponent className={`h-8 w-8 ${plan.iconColor}`} />
                     </div>
 
-                                  <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">{plan.name}</h3>
-              <p className="text-muted-foreground font-light mb-4">{plan.description}</p>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">{plan.name}</h3>
+                    <p className="text-gray-600 font-light mb-4">{plan.description}</p>
 
                     {/* Price */}
                     <div className="mb-2">
-                                      <span className="text-3xl sm:text-4xl font-light text-foreground">{getPrice(plan)}</span>
-                {plan.price.monthly > 0 && (
-                  <span className="text-muted-foreground text-sm ml-1">{isAnnual ? "/year" : "/month"}</span>
-                )}
+                      <span className="text-3xl sm:text-4xl font-light text-gray-900">{getPrice(plan)}</span>
+                      {plan.price.monthly > 0 && (
+                        <span className="text-gray-500 text-sm ml-1">{isAnnual ? "/year" : "/month"}</span>
+                      )}
                     </div>
 
                     {/* Savings Badge */}
                     {isAnnual && savings && (
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs mb-4">
+                      <Badge className="bg-green-100 text-green-700 border-green-200 text-xs mb-4">
                         Save ${savings.amount}/year ({savings.percentage}% off)
                       </Badge>
                     )}
 
                     {/* Family Plan Value */}
                     {plan.name === "Family" && (
-                      <p className="text-xs text-muted-foreground mb-4">
+                      <p className="text-xs text-gray-500 mb-4">
                         Just ${(isAnnual ? plan.price.annual / 12 : plan.price.monthly) / 6}/month per person
                       </p>
                     )}
@@ -211,23 +208,23 @@ export default function PricingPage() {
                     {plan.features.map((feature, index) => (
                       <div key={index} className="flex items-start gap-3">
                         {feature.included ? (
-                          <Check className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                          <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         ) : (
-                          <div className="h-5 w-5 mt-0.5 flex-shrink-0 rounded-full border border-gray-600" />
+                          <div className="h-5 w-5 mt-0.5 flex-shrink-0 rounded-full border border-gray-400" />
                         )}
                         <div className="flex-1">
                           <span
                             className={`text-sm ${
                               feature.included
                                 ? feature.highlight
-                                                  ? "text-foreground font-medium"
-                : "text-muted-foreground"
-                : "text-muted-foreground/70"
+                                  ? "text-gray-900 font-medium"
+                                  : "text-gray-700"
+                                : "text-gray-400"
                             }`}
                           >
                             {feature.text}
                           </span>
-                          {feature.limited && <div className="text-xs text-muted-foreground mt-1">{feature.limited}</div>}
+                          {feature.limited && <div className="text-xs text-gray-500 mt-1">{feature.limited}</div>}
                         </div>
                       </div>
                     ))}
@@ -241,21 +238,21 @@ export default function PricingPage() {
         {/* Trust Indicators */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8 flex-wrap">
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-gray-600">
               <Shield className="h-5 w-5" />
               <span className="text-sm">HIPAA Compliant</span>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-gray-600">
               <Zap className="h-5 w-5" />
               <span className="text-sm">Instant Access</span>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-gray-600">
               <Crown className="h-5 w-5" />
               <span className="text-sm">Cancel Anytime</span>
             </div>
           </div>
 
-          <p className="text-muted-foreground/70 text-sm max-w-2xl mx-auto">
+          <p className="text-gray-500 text-sm max-w-2xl mx-auto">
             All plans include bank-level security, 24/7 availability, and seamless sync across all your devices. Your
             health data stays private and secure, always.
           </p>
@@ -263,7 +260,7 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-light text-foreground text-center mb-12">Frequently Asked Questions</h2>
+          <h2 className="text-2xl sm:text-3xl font-light text-gray-900 text-center mb-12">Frequently Asked Questions</h2>
 
           <div className="space-y-6">
             {[
@@ -293,10 +290,10 @@ export default function PricingPage() {
                   "Yes! Premium and Family plans come with a 7-day free trial. No credit card required to start, and you can cancel anytime during the trial.",
               },
             ].map((faq, index) => (
-              <Card key={index} className="border-0 bg-background/50">
+              <Card key={index} className="border border-gray-200 bg-white shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-foreground font-medium mb-2">{faq.question}</h3>
-                  <p className="text-muted-foreground font-light">{faq.answer}</p>
+                  <h3 className="text-gray-900 font-medium mb-2">{faq.question}</h3>
+                  <p className="text-gray-600 font-light">{faq.answer}</p>
                 </CardContent>
               </Card>
             ))}
@@ -305,13 +302,13 @@ export default function PricingPage() {
 
         {/* Final CTA */}
         <div className="text-center mt-16">
-          <h2 className="text-2xl sm:text-3xl font-light text-foreground mb-4">Ready to Transform Your Health?</h2>
-          <p className="text-muted-foreground font-light mb-8 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-light text-gray-900 mb-4">Ready to Transform Your Health?</h2>
+          <p className="text-gray-600 font-light mb-8 max-w-xl mx-auto">
             Join thousands of users who are already taking control of their health with AI-powered insights and
             personalized guidance.
           </p>
           <Link href="/chat">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium">
+            <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium">
               Start Your Health Journey
             </Button>
           </Link>
