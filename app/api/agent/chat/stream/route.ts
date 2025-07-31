@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process and validate history
-    let processedHistory = []
+    let processedHistory: Array<{ role: string; content: string }> = []
     if (history && Array.isArray(history)) {
       processedHistory = history
         .filter((msg) => msg && msg.content && msg.content.trim() !== "")
@@ -58,12 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Enhanced logging
-    console.log("=== SWARMS STREAMING API REQUEST ===")
-    console.log("Agent:", agent_config?.agent_name)
-    console.log("Task:", task?.substring(0, 100) + "...")
-    console.log("Raw history length:", history?.length || 0)
-    console.log("Processed history length:", processedHistory.length)
-    console.log("Processed history:", JSON.stringify(processedHistory, null, 2))
+
 
     const payload = {
       agent_config: {
@@ -76,8 +71,7 @@ export async function POST(request: NextRequest) {
       history: processedHistory,
     }
 
-    console.log("=== SENDING TO SWARMS STREAMING API ===")
-    console.log("Payload:", JSON.stringify(payload, null, 2))
+
 
     // For now, let's use the regular completions endpoint and simulate streaming
     // This is because the Swarms API might not support true streaming
@@ -100,11 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await swarmsResponse.json()
-    console.log("=== SWARMS STREAMING API RESPONSE ===")
-    console.log("Response structure:", Object.keys(data))
-    console.log("Full response:", JSON.stringify(data, null, 2))
-    console.log("Outputs array:", data.outputs)
-    console.log("Outputs length:", data.outputs?.length || 0)
+
 
     // Check if the response has the expected structure
     if (!data) {
@@ -122,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Handle case where outputs array is empty - this might happen with very short messages
     if (!data.outputs || !Array.isArray(data.outputs) || data.outputs.length === 0) {
-      console.log("Empty outputs array, checking for alternative response structure")
+      
       
       // Check if there's a direct response in the data
       if (data.response || data.content || data.message) {

@@ -15,12 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "SWARMS_API_KEY is not configured" }, { status: 500 })
     }
 
-    console.log("Making request to Swarms API with:", {
-      url: `${SWARMS_API_URL}/v1/swarm/completions`,
-      swarm_name: swarmData.name,
-      task_length: swarmData.task?.length,
-      agent_count: swarmData.agents?.length,
-    })
+
 
     const response = await fetch(`${SWARMS_API_URL}/v1/swarm/completions`, {
       method: "POST",
@@ -38,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log("Swarms API response structure:", Object.keys(data))
+
 
     // Process the response to make it easier to use on the client
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {

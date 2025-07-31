@@ -108,36 +108,21 @@ export default function ChatPage() {
         content: msg.content,
       }))
 
-      console.log("=== CLIENT SIDE DEBUG ===")
-      console.log("Current messages:", messages.length)
-      console.log("History being sent:", historyForApi)
-      console.log("Current user input:", currentInput)
-
       // Use the regular chat endpoint instead of streaming
       const response = await chatWithAgent(agent, currentInput, historyForApi, selectedModel)
-      
-      console.log("=== RESPONSE DEBUG ===")
-      console.log("Full response:", response)
-      console.log("Response outputs:", response?.outputs)
-      console.log("Response processedOutput:", response?.processedOutput)
       
       // Extract the response content
       let fullResponse = ""
       if (typeof response === "string") {
         // If response is already a string (the AI response), use it directly
         fullResponse = response
-        console.log("Using direct string response:", fullResponse)
       } else if (response && response.outputs && response.outputs.length > 0) {
         const lastOutput = response.outputs[response.outputs.length - 1]
-        console.log("Last output:", lastOutput)
         fullResponse = lastOutput.content || ""
-        console.log("Extracted content:", fullResponse)
       } else if (response && response.processedOutput) {
         fullResponse = response.processedOutput
-        console.log("Using processedOutput:", fullResponse)
       } else {
         fullResponse = "I processed your request, but didn't receive a response. Please try again."
-        console.log("Using fallback message")
       }
 
       // Create the assistant message with the full response

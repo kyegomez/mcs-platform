@@ -14,12 +14,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
         content: msg.content,
       }))
 
-    console.log("Sending chat with history:", {
-      agent_name: agent.name,
-      message_length: message.length,
-      history_length: historyFormatted.length,
-      history_sample: historyFormatted.slice(-2), // Log last 2 messages for debugging
-    })
+
 
     const payload = {
       agent_config: {
@@ -40,11 +35,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
       })),
     }
 
-    console.log("Sending request to chat API:", {
-      agent_name: agent.name,
-      message_length: message.length,
-      history_length: historyFormatted.length,
-    })
+
 
     const response = await fetch("/api/agent/chat", {
       method: "POST",
@@ -61,10 +52,7 @@ export async function chatWithAgent(agent: Agent, message: string, history: Chat
 
     const data = await response.json()
     
-    console.log("=== CHAT WITH AGENT DEBUG ===")
-    console.log("Raw API response data:", data)
-    console.log("Data type:", typeof data)
-    console.log("Data keys:", Object.keys(data))
+
 
     // Return the full response object so the client can access both processedOutput and outputs
     return data
@@ -91,12 +79,7 @@ export async function streamChatWithAgent(
         content: msg.content,
       }))
 
-    console.log("Streaming chat with history:", {
-      agent_name: agent.name,
-      message_length: message.length,
-      history_length: historyFormatted.length,
-      history_sample: historyFormatted.slice(-2), // Log last 2 messages for debugging
-    })
+
 
     const payload = {
       agent_config: {
@@ -117,11 +100,7 @@ export async function streamChatWithAgent(
       })),
     }
 
-    console.log("Sending request to stream API:", {
-      agent_name: agent.name,
-      message_length: message.length,
-      history_length: historyFormatted.length,
-    })
+
 
     const response = await fetch("/api/agent/chat/stream", {
       method: "POST",

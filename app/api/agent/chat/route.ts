@@ -27,12 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Enhanced logging
-    console.log("=== SWARMS API REQUEST ===")
-    console.log("Agent:", agent_config?.agent_name)
-    console.log("Task:", task?.substring(0, 100) + "...")
-    console.log("Raw history length:", history?.length || 0)
-    console.log("Processed history length:", processedHistory.length)
-    console.log("Processed history:", JSON.stringify(processedHistory, null, 2))
+
 
     const payload = {
       agent_config: {
@@ -45,8 +40,7 @@ export async function POST(request: NextRequest) {
       history: processedHistory,
     }
 
-    console.log("=== SENDING TO SWARMS API ===")
-    console.log("Payload:", JSON.stringify(payload, null, 2))
+
 
     const response = await fetch(`${SWARMS_API_URL}/v1/agent/completions`, {
       method: "POST",
@@ -64,23 +58,21 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log("=== SWARMS API RESPONSE ===")
-    console.log("Response structure:", Object.keys(data))
-    console.log("Full response:", JSON.stringify(data, null, 2))
+
 
     // Process the response to make it easier to use on the client
     if (data && data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
       // Get the last output from the array, which should contain the actual response
       const lastOutput = data.outputs[data.outputs.length - 1]
-      console.log("Last output:", lastOutput)
+
 
       // Add a processed field to make it easier for the client
       data.processedOutput = lastOutput?.content || "No content found in response"
-      console.log("Set processedOutput to:", data.processedOutput)
+
     } else {
       // Handle empty outputs array - provide a default response
       data.processedOutput = "I understand. How can I help you further?"
-      console.log("No outputs found, using default processedOutput")
+      
     }
 
     return NextResponse.json(data)

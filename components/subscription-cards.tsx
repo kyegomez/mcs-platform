@@ -45,7 +45,7 @@ export function SubscriptionCards() {
   const handleUpgrade = (tier: "premium" | "family") => {
     try {
       // In a real app, this would integrate with Stripe or payment processor
-      console.log(`Upgrading to ${tier} plan`)
+  
 
       // For demo purposes, simulate upgrade
       const newSubscription: UserSubscription = {

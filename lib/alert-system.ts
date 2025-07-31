@@ -325,7 +325,7 @@ export function checkAndTriggerAlerts(): Alert[] {
 export function snoozeAlert(alertId: string, minutes: number): void {
   // Implementation for snoozing alerts
   // This could create a delayed trigger or modify the schedule
-  console.log(`Snoozing alert ${alertId} for ${minutes} minutes`)
+  
 }
 
 export function dismissAlert(alertId: string): void {

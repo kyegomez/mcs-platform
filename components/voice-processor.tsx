@@ -91,7 +91,7 @@ export function VoiceProcessor({
       recognition.lang = "en-US"
 
       recognition.onstart = () => {
-        console.log("Speech recognition started")
+
         startAudioVisualization()
       }
 

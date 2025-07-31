@@ -238,7 +238,6 @@ export default function NotesPage() {
     if (!note) return
 
     // File deletion temporarily disabled
-    console.log("File deletion functionality is currently unavailable")
 
     const updatedNotes = notes.filter((note) => note.id !== id)
     setNotes(updatedNotes)
@@ -267,7 +266,6 @@ export default function NotesPage() {
     const file = attachments.find((f) => f.id === fileId)
     if (file) {
       // File deletion temporarily disabled
-      console.log("File deletion functionality is currently unavailable")
         setAttachments(attachments.filter((f) => f.id !== fileId))
     }
   }

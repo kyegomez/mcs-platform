@@ -5,7 +5,7 @@ export async function GET() {
   const apiKey = process.env.SWARMS_API_KEY
 
   // Log the API key status (without revealing the key)
-  console.log("API Key status:", apiKey ? "Configured" : "Not configured")
+
 
   return NextResponse.json({
     configured: Boolean(apiKey),

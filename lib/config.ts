@@ -7,7 +7,7 @@ export const SWARMS_API_CONFIG = {
 // Check if API key is available
 export function isApiKeyConfigured(): boolean {
   const isConfigured = Boolean(process.env.SWARMS_API_KEY)
-  console.log("API Key configured:", isConfigured)
+
   return isConfigured
 }
 
