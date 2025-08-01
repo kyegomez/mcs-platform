@@ -126,52 +126,63 @@ export default function Dashboard() {
       </Head>
 
       <div className="max-w-6xl mx-auto space-y-12 px-4 sm:px-6 page-transition">
-        {/* Hero Section with enhanced design */}
-        <header className="text-center pt-12 pb-8 spring-bounce relative">
+        {/* Hero Section with enhanced design - Larger and more impactful */}
+        <header className="text-center pt-20 pb-16 spring-bounce relative min-h-[80vh] flex flex-col justify-center">
           {/* Background gradient effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent rounded-3xl -z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent rounded-3xl -z-10"></div>
           
-          <div className="flex items-center justify-center gap-3 mb-6">
+          {/* Enhanced title section */}
+          <div className="flex items-center justify-center gap-4 mb-12">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-              <Sparkles className="h-10 w-10 text-mcs-blue relative z-10 animate-bounce" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-2xl opacity-40 animate-pulse"></div>
+              <Sparkles className="h-16 w-16 text-mcs-blue relative z-10 animate-bounce" />
             </div>
-            <h1 className="text-5xl sm:text-7xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+            <h1 className="text-6xl sm:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent leading-none">
               Health
             </h1>
           </div>
           
-          <p className="text-muted-foreground text-xl sm:text-2xl font-light max-w-3xl mx-auto mb-8 leading-relaxed">
+          {/* Enhanced subtitle */}
+          <p className="text-muted-foreground text-2xl sm:text-3xl lg:text-4xl font-light max-w-4xl mx-auto mb-12 leading-relaxed">
             Your personal healthcare assistant powered by AI
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          {/* Enhanced description */}
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto mb-12 leading-relaxed">
+            Get instant medical advice, comprehensive consultations, and personalized care from our team of AI specialists
+          </p>
+          
+          {/* Enhanced buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
             <Link href="/chat">
-              <Button className="px-8 py-4 bg-gradient-to-r from-mcs-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Button className="px-12 py-6 bg-gradient-to-r from-mcs-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-xl font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 rounded-2xl">
                 Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-3 h-6 w-6" />
               </Button>
             </Link>
             <Link href="/about">
-              <Button variant="outline" className="px-8 py-4 border-2 border-primary/30 text-foreground hover:bg-primary/10 text-lg font-medium transition-all duration-300 transform hover:scale-105">
+              <Button variant="outline" className="px-12 py-6 border-3 border-primary/40 text-foreground hover:bg-primary/15 text-xl font-semibold transition-all duration-300 transform hover:scale-110 rounded-2xl">
                 Learn More
               </Button>
             </Link>
           </div>
           
-          {/* Stats or features preview */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="text-2xl font-bold text-primary mb-1">24/7</div>
-              <div className="text-sm text-muted-foreground">Available</div>
+          {/* Enhanced stats section */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center p-8 rounded-3xl bg-white/8 backdrop-blur-sm border border-white/15 hover:bg-white/12 transition-all duration-300 transform hover:scale-105">
+              <div className="text-4xl font-bold text-primary mb-3">24/7</div>
+              <div className="text-lg text-muted-foreground font-medium">Available</div>
+              <div className="text-sm text-muted-foreground mt-2">Always ready to help</div>
             </div>
-            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="text-2xl font-bold text-primary mb-1">AI</div>
-              <div className="text-sm text-muted-foreground">Powered</div>
+            <div className="text-center p-8 rounded-3xl bg-white/8 backdrop-blur-sm border border-white/15 hover:bg-white/12 transition-all duration-300 transform hover:scale-105">
+              <div className="text-4xl font-bold text-primary mb-3">AI</div>
+              <div className="text-lg text-muted-foreground font-medium">Powered</div>
+              <div className="text-sm text-muted-foreground mt-2">Advanced technology</div>
             </div>
-            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="text-2xl font-bold text-primary mb-1">Secure</div>
-              <div className="text-sm text-muted-foreground">Private</div>
+            <div className="text-center p-8 rounded-3xl bg-white/8 backdrop-blur-sm border border-white/15 hover:bg-white/12 transition-all duration-300 transform hover:scale-105">
+              <div className="text-4xl font-bold text-primary mb-3">Secure</div>
+              <div className="text-lg text-muted-foreground font-medium">Private</div>
+              <div className="text-sm text-muted-foreground mt-2">Your data is safe</div>
             </div>
           </div>
         </header>
