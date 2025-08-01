@@ -551,3 +551,144 @@ html {
     transform: scale(1);
   }
 }
+
+/* Prose styles for markdown content */
+.prose {
+  color: hsl(var(--foreground));
+  max-width: none;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1 {
+  font-size: 1.5em;
+  margin-top: 0;
+}
+
+.prose h2 {
+  font-size: 1.25em;
+}
+
+.prose h3 {
+  font-size: 1.125em;
+}
+
+.prose p {
+  margin-top: 0;
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 0;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.prose blockquote {
+  font-style: italic;
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 1em;
+  margin: 1.5em 0;
+}
+
+.prose code {
+  background-color: hsl(var(--muted));
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.prose pre {
+  background-color: hsl(var(--muted));
+  border-radius: 0.5em;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.prose em {
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.prose th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 2em 0;
+}
+
+/* Agent card animations */
+.agent-card-enter {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: agentCardEnter 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes agentCardEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.agent-card-stagger {
+  animation-delay: calc(var(--stagger-index) * 0.2s);
+}
+
+/* Smooth agent icon animations */
+.agent-icon-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-icon-hover:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

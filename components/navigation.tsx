@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { MessageSquare, FileText, Activity, User, Command, DollarSign, Menu, X, Info, Settings, Bell, Search, ChevronDown } from "lucide-react"
+import { MessageSquare, FileText, Activity, User, Command, DollarSign, Menu, X, Info, Settings, Bell, Search, ChevronDown, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -30,6 +30,11 @@ const Navigation = () => {
       name: "Chat",
       path: "/chat",
       icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      name: "Group Chat",
+      path: "/groupchat",
+      icon: <Users className="h-5 w-5" />,
     },
     {
       name: "Notes",

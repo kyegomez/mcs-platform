@@ -1,72 +1,102 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { agents } from "@/data/agents"
-import type { ChatMessage } from "@/types/agent"
-import { chatWithAgent } from "@/lib/swarms-api"
+import { useRouter } from "next/navigation"
 import { v4 as uuidv4 } from "uuid"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Send, AlertCircle, Trash2, User, Loader2 } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Trash2, User, Loader2, Users, Stethoscope, Brain, Pill } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getChatHistory, saveChatHistory } from "@/lib/chat-storage"
-import { AgentIcon } from "@/components/agent-icon"
 import { VoiceProcessor } from "@/components/voice-processor"
 import { ModelSelector } from "@/components/model-selector"
 import { useModelSelection } from "@/hooks/use-model-selection"
+import { runMedicalGroupChat } from "@/lib/medical-groupchat-api"
+
 import { MarkdownContent } from "@/components/markdown-content"
 
-export default function ChatPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { agentId } = params
-  const agent = agents.find((a) => a.id === agentId)
+interface GroupChatMessage {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+  agentOutputs?: Array<{
+    role: string
+    content: string
+  }>
+}
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+const medicalAgents = [
+  {
+    name: "Medical Diagnoser",
+    icon: <Stethoscope className="h-4 w-4" />,
+    iconColor: "#3B82F6",
+    description: "Comprehensive Diagnosis",
+  },
+  {
+    name: "Medical Verifier",
+    icon: <Brain className="h-4 w-4" />,
+    iconColor: "#10B981", 
+    description: "Diagnostic Validation",
+  },
+  {
+    name: "Treatment Specialist",
+    icon: <Pill className="h-4 w-4" />,
+    iconColor: "#F59E0B",
+    description: "Treatment Planning",
+  },
+]
+
+export default function GroupChatConsultationPage() {
+  const router = useRouter()
+  const [messages, setMessages] = useState<GroupChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-
   const [error, setError] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [speakResponse, setSpeakResponse] = useState<((text: string) => void) | null>(null)
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const speakText = (text: string) => {
+    if (speakResponse) {
+      speakResponse(text)
+    }
+  }
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const { selectedModel, changeModel, isLoading: modelLoading } = useModelSelection()
 
   // Load chat history from localStorage
   useEffect(() => {
-    if (!agent) {
-      router.push("/chat")
-      return
-    }
-
-    const savedMessages = getChatHistory(agent.id)
-
-    if (savedMessages.length > 0) {
-      setMessages(savedMessages)
+    const savedMessages = localStorage.getItem("groupchat-history")
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages)
+        setMessages(parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        })))
+      } catch (e) {
+        console.error("Error loading groupchat history:", e)
+      }
     } else {
       // Add welcome message if no history exists
-      const welcomeMessage: ChatMessage = {
+      const welcomeMessage: GroupChatMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
+        content: "Hello! I'm your medical group consultation team. We have three specialists ready to help: a Medical Diagnoser, Medical Verifier, and Treatment Specialist. Please describe your symptoms or health concerns, and we'll work together to provide you with comprehensive care.",
         timestamp: new Date(),
-        agentId: agent.id,
       }
       setMessages([welcomeMessage])
     }
-  }, [agent, router])
+  }, [])
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
-    if (agent && messages.length > 0) {
-      saveChatHistory(agent.id, messages)
+    if (messages.length > 0) {
+      localStorage.setItem("groupchat-history", JSON.stringify(messages))
     }
-  }, [agent, messages])
+  }, [messages])
 
   useEffect(() => {
     scrollToBottom()
@@ -80,17 +110,17 @@ export default function ChatPage() {
     setInput(transcript)
   }
 
-  const handleSpeakResponse = (speakFunction: (text: string) => void) => {
-    setSpeakResponse(() => speakFunction)
+  const setSpeakResponseFunction = (speakFunction: (text: string) => void) => {
+    setSpeakResponse(speakFunction)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!input.trim() || isLoading || !agent) return
+    if (!input.trim() || isLoading) return
 
     setError(null)
-    const userMessage: ChatMessage = {
+    const userMessage: GroupChatMessage = {
       id: uuidv4(),
       role: "user",
       content: input,
@@ -102,59 +132,82 @@ export default function ChatPage() {
     setInput("")
     setIsLoading(true)
 
+    // Add processing message
+    const processingMessage: GroupChatMessage = {
+      id: uuidv4(),
+      role: "assistant",
+      content: "Medical team processing your request...",
+      timestamp: new Date(),
+    }
+    setMessages((prev) => [...prev, processingMessage])
+
     try {
-      // Create history array with all previous messages
-      const historyForApi = messages.map((msg) => ({
+      // Create history array with all previous messages plus the new user message
+      const historyForApi = [...messages, userMessage].map((msg) => ({
         role: msg.role,
         content: msg.content,
       }))
 
-      // Use the regular chat endpoint instead of streaming
-      const response = await chatWithAgent(agent, currentInput, historyForApi, selectedModel)
+      // Use the medical groupchat API
+      const response = await runMedicalGroupChat(currentInput, historyForApi, selectedModel)
       
-      // Extract the response content
+      // Extract the response content and agent outputs
       let fullResponse = ""
-      if (typeof response === "string") {
-        // If response is already a string (the AI response), use it directly
+      let agentOutputs: Array<{ role: string; content: string }> = []
+
+      if (response && response.output && Array.isArray(response.output)) {
+        // Extract individual agent outputs
+        agentOutputs = response.output.map((output: any) => ({
+          role: output.role,
+          content: output.content,
+        }))
+
+        // Sort agents in the correct sequential order: Diagnoser -> Verifier -> Treatment
+        const agentOrder = ["Medical Diagnoser", "Medical Verifier", "Treatment Specialist"]
+        agentOutputs.sort((a, b) => {
+          const aIndex = agentOrder.indexOf(a.role)
+          const bIndex = agentOrder.indexOf(b.role)
+          return aIndex - bIndex
+        })
+
+        // For individual agent outputs, we don't need a combined response
+        fullResponse = "Medical consultation completed by our specialist team."
+      } else if (typeof response === "string") {
         fullResponse = response
-      } else if (response && response.outputs && response.outputs.length > 0) {
-        const lastOutput = response.outputs[response.outputs.length - 1]
-        fullResponse = lastOutput.content || ""
-      } else if (response && response.processedOutput) {
-        fullResponse = response.processedOutput
       } else {
         fullResponse = "I processed your request, but didn't receive a response. Please try again."
       }
 
-      // Create the assistant message with the full response
-      const assistantMessage: ChatMessage = {
-        id: uuidv4(),
-        role: "assistant",
-        content: fullResponse || "I processed your request, but didn't receive a response. Please try again.",
-        timestamp: new Date(),
-        agentId: agent.id,
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
+      // Replace the processing message with the actual response
+      setMessages((prev) => {
+        const messagesWithoutProcessing = prev.filter(msg => msg.content !== "Medical team processing your request...")
+        const assistantMessage: GroupChatMessage = {
+          id: uuidv4(),
+          role: "assistant",
+          content: fullResponse || "I processed your request, but didn't receive a response. Please try again.",
+          timestamp: new Date(),
+          agentOutputs: agentOutputs.length > 0 ? agentOutputs : undefined,
+        }
+        return [...messagesWithoutProcessing, assistantMessage]
+      })
 
       // Speak the response if voice is enabled
       if (speakResponse && fullResponse) {
         speakResponse(fullResponse)
       }
     } catch (error) {
-      console.error("Error in chat:", error)
+      console.error("Error in groupchat:", error)
       setError(
         error instanceof Error
           ? `Error: ${error.message}`
-          : "Failed to communicate with the healthcare agent. Please try again.",
+          : "Failed to communicate with the medical team. Please try again.",
       )
 
-      const errorMessage: ChatMessage = {
+      const errorMessage: GroupChatMessage = {
         id: uuidv4(),
         role: "assistant",
         content: "I'm sorry, I encountered an error processing your request. Please try again.",
         timestamp: new Date(),
-        agentId: agent.id,
       }
 
       setMessages((prev) => [...prev, errorMessage])
@@ -164,28 +217,15 @@ export default function ChatPage() {
   }
 
   const clearChatHistory = () => {
-    if (!agent) return
-
-    const welcomeMessage: ChatMessage = {
+    const welcomeMessage: GroupChatMessage = {
       id: uuidv4(),
       role: "assistant",
-      content: `Hello, I'm ${agent.name}, your ${agent.specialty} specialist. How can I assist you today?`,
+      content: "Hello! I'm your medical group consultation team. We have three specialists ready to help: a Medical Diagnoser, Medical Verifier, and Treatment Specialist. Please describe your symptoms or health concerns, and we'll work together to provide you with comprehensive care.",
       timestamp: new Date(),
-      agentId: agent.id,
     }
 
     setMessages([welcomeMessage])
-  }
-
-  if (!agent) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-mcs-blue" />
-          <p className="text-gray-400">Loading specialist...</p>
-        </div>
-      </div>
-    )
+    localStorage.removeItem("groupchat-history")
   }
 
   return (
@@ -200,7 +240,7 @@ export default function ChatPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push("/chat")}
+              onClick={() => router.push("/groupchat")}
               className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl btn-interactive flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -208,20 +248,14 @@ export default function ChatPage() {
 
             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <div className="relative flex-shrink-0">
-                <div
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center border-2 transition-transform duration-200 hover:scale-110"
-                  style={{
-                    borderColor: agent.iconColor + "30",
-                    backgroundColor: agent.iconColor + "10",
-                  }}
-                >
-                  <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="lg" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center border-2 transition-transform duration-200 hover:scale-110 bg-primary/20 border-primary/30">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 rounded-full status-online border-2 border-black"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-lg sm:text-xl text-foreground truncate">{agent.name}</h1>
-                <p className="text-xs sm:text-sm text-mcs-blue truncate">{agent.specialty}</p>
+                <h1 className="font-bold text-lg sm:text-xl text-foreground truncate">Medical Group Consultation</h1>
+                <p className="text-xs sm:text-sm text-mcs-blue truncate">3 AI Specialists • Collaborative Care</p>
               </div>
             </div>
           </div>
@@ -279,8 +313,8 @@ export default function ChatPage() {
                 style={
                   message.role === "assistant"
                     ? {
-                        borderColor: agent.iconColor + "30",
-                        backgroundColor: agent.iconColor + "10",
+                        borderColor: "#3B82F6" + "30",
+                        backgroundColor: "#3B82F6" + "10",
                       }
                     : {}
                 }
@@ -288,7 +322,7 @@ export default function ChatPage() {
                 {message.role === "user" ? (
                   <User className="h-4 w-4 text-foreground" />
                 ) : (
-                  <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
+                  <Users className="h-4 w-4 text-primary" />
                 )}
               </div>
             </div>
@@ -301,19 +335,61 @@ export default function ChatPage() {
                     : "border-white/10"
                 }`}
               >
-                <MarkdownContent content={message.content} />
+                {/* Display message content only if no individual agent outputs */}
+                {(!message.agentOutputs || message.agentOutputs.length === 0) && (
+                  <div className="whitespace-pre-wrap text-foreground leading-relaxed">{message.content}</div>
+                )}
+                
+                {/* Show individual agent outputs if available */}
+                {message.agentOutputs && message.agentOutputs.length > 0 && (
+                  <div className="mt-6 space-y-4">
+                    {message.agentOutputs.map((output, index) => {
+                      const agent = medicalAgents.find(a => a.name === output.role)
+                      return (
+                        <div 
+                          key={index} 
+                          className="glass-card p-4 rounded-xl border border-white/10 agent-card-enter"
+                          style={{ 
+                            animationDelay: `${index * 0.2}s`,
+                            borderColor: agent?.iconColor + "30",
+                            backgroundColor: agent?.iconColor + "05"
+                          }}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div 
+                              className="w-10 h-10 rounded-xl flex items-center justify-center border-2 agent-icon-hover"
+                              style={{ 
+                                backgroundColor: agent?.iconColor + "20",
+                                borderColor: agent?.iconColor + "30"
+                              }}
+                            >
+                              <div style={{ color: agent?.iconColor }}>
+                                {agent?.icon}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-foreground">{output.role}</h4>
+                              <p className="text-xs text-muted-foreground">{agent?.description}</p>
+                            </div>
+                          </div>
+                          <div className="text-foreground">
+                            <MarkdownContent content={output.content} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-                              <div className="text-xs text-muted-foreground/70 mt-2 px-2">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
+              <div className="text-xs text-muted-foreground/70 mt-2 px-2">
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
             </div>
           </div>
         ))}
-
-
 
         <div ref={messagesEndRef} />
       </div>
@@ -324,7 +400,7 @@ export default function ChatPage() {
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message or use voice input..."
+            placeholder="Describe your symptoms or health concerns..."
             className="resize-none bg-background/50 border-border/50 focus-visible:ring-primary focus-visible:border-primary/50 rounded-xl text-foreground placeholder:text-muted-foreground text-sm sm:text-base focus-smooth"
             rows={1}
             onKeyDown={(e) => {
@@ -339,7 +415,7 @@ export default function ChatPage() {
             <div className="hidden sm:block">
               <VoiceProcessor
                 onTranscript={handleVoiceTranscript}
-                onSpeakResponse={handleSpeakResponse}
+                onSpeakResponse={speakText}
                 isListening={isListening}
                 setIsListening={setIsListening}
               />
@@ -359,7 +435,7 @@ export default function ChatPage() {
         <div className="sm:hidden mt-2 pt-2 border-t border-white/10">
           <VoiceProcessor
             onTranscript={handleVoiceTranscript}
-            onSpeakResponse={handleSpeakResponse}
+            onSpeakResponse={speakText}
             isListening={isListening}
             setIsListening={setIsListening}
           />
@@ -367,4 +443,4 @@ export default function ChatPage() {
       </form>
     </div>
   )
-}
+} 

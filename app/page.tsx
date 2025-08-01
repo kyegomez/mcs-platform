@@ -7,7 +7,7 @@ import { agents } from "@/data/agents"
 import { AgentIcon } from "@/components/agent-icon"
 import { getChatAgentIds, getChatHistory } from "@/lib/chat-storage"
 import Link from "next/link"
-import { FileText, ArrowRight, MessageSquare, Sparkles } from "lucide-react"
+import { FileText, ArrowRight, MessageSquare, Sparkles, Users } from "lucide-react"
 import Head from "next/head"
 
 interface RecentActivity {
@@ -125,107 +125,173 @@ export default function Dashboard() {
         <link rel="canonical" href="https://mcs-health.vercel.app/" />
       </Head>
 
-      <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6 page-transition">
-        {/* Header with animation */}
-        <header className="text-center pt-8 pb-4 spring-bounce">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-8 w-8 text-mcs-blue animate-pulse" />
-            <h1 className="text-4xl sm:text-5xl font-light text-foreground">Health</h1>
+      <div className="max-w-6xl mx-auto space-y-12 px-4 sm:px-6 page-transition">
+        {/* Hero Section with enhanced design */}
+        <header className="text-center pt-12 pb-8 spring-bounce relative">
+          {/* Background gradient effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent rounded-3xl -z-10"></div>
+          
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
+              <Sparkles className="h-10 w-10 text-mcs-blue relative z-10 animate-bounce" />
+            </div>
+            <h1 className="text-5xl sm:text-7xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              Health
+            </h1>
           </div>
-                      <p className="text-muted-foreground text-lg sm:text-xl font-light max-w-2xl mx-auto mb-6">
+          
+          <p className="text-muted-foreground text-xl sm:text-2xl font-light max-w-3xl mx-auto mb-8 leading-relaxed">
             Your personal healthcare assistant powered by AI
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Link href="/chat">
-              <Button className="px-6 py-2 bg-mcs-blue hover:bg-mcs-blue-light">
+              <Button className="px-8 py-4 bg-gradient-to-r from-mcs-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                 Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/about">
-              <Button variant="outline" className="px-6 py-2 border-gray-400 text-gray-300 hover:bg-white/10">
+              <Button variant="outline" className="px-8 py-4 border-2 border-primary/30 text-foreground hover:bg-primary/10 text-lg font-medium transition-all duration-300 transform hover:scale-105">
                 Learn More
               </Button>
             </Link>
           </div>
+          
+          {/* Stats or features preview */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="text-2xl font-bold text-primary mb-1">24/7</div>
+              <div className="text-sm text-muted-foreground">Available</div>
+            </div>
+            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="text-2xl font-bold text-primary mb-1">AI</div>
+              <div className="text-sm text-muted-foreground">Powered</div>
+            </div>
+            <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="text-2xl font-bold text-primary mb-1">Secure</div>
+              <div className="text-sm text-muted-foreground">Private</div>
+            </div>
+          </div>
         </header>
 
-        {/* Main Actions - Enhanced for mobile */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" aria-label="Main Actions">
-          <Link href="/chat" aria-label="Start consultation with AI medical specialists" className="stagger-item">
-            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-mcs-blue/10 to-mcs-blue/5 hover:from-mcs-blue/20 hover:to-mcs-blue/10 card-interactive h-full">
-              <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-mcs-blue/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
-                  <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-mcs-blue" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-medium text-foreground mb-2 sm:mb-3">Talk to a Specialist</h2>
-                <p className="text-muted-foreground font-light text-sm sm:text-base">
-                  Get instant medical advice from AI specialists
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+        {/* Main Actions - Enhanced with modern design */}
+        <section className="space-y-6" aria-label="Main Actions">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Get Started</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Choose how you'd like to interact with your AI healthcare assistant
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <Link href="/chat" aria-label="Start consultation with AI medical specialists" className="stagger-item group">
+              <Card className="relative overflow-hidden cursor-pointer border-0 bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-blue-700/10 hover:from-blue-500/20 hover:via-blue-600/15 hover:to-blue-700/20 card-interactive h-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="relative p-8 text-center h-full flex flex-col justify-center">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-lg">
+                    <MessageSquare className="w-10 h-10 text-blue-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-blue-400 transition-colors">Talk to a Specialist</h3>
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    Get instant medical advice from AI specialists tailored to your needs
+                  </p>
+                  <div className="mt-6 flex items-center justify-center text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-sm font-medium">Get Started</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Link href="/notes" aria-label="Access your health journal and notes" className="stagger-item">
-            <Card className="group cursor-pointer border-0 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 card-interactive h-full">
-              <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 elastic-scale">
-                  <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-green-400" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-medium text-foreground mb-2 sm:mb-3">Health Journal</h2>
-                <p className="text-muted-foreground font-light text-sm sm:text-base">
-                  {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey"}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link href="/groupchat" aria-label="Start group consultation with multiple AI specialists" className="stagger-item group">
+              <Card className="relative overflow-hidden cursor-pointer border-0 bg-gradient-to-br from-purple-500/10 via-purple-600/5 to-purple-700/10 hover:from-purple-500/20 hover:via-purple-600/15 hover:to-purple-700/20 card-interactive h-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="relative p-8 text-center h-full flex flex-col justify-center">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-purple-500/20 to-purple-600/30 flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-lg">
+                    <Users className="w-10 h-10 text-purple-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-purple-400 transition-colors">Group Consultation</h3>
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    Get comprehensive care from multiple AI specialists working together
+                  </p>
+                  <div className="mt-6 flex items-center justify-center text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-sm font-medium">Start Consultation</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/notes" aria-label="Access your health journal and notes" className="stagger-item group">
+              <Card className="relative overflow-hidden cursor-pointer border-0 bg-gradient-to-br from-green-500/10 via-green-600/5 to-green-700/10 hover:from-green-500/20 hover:via-green-600/15 hover:to-green-700/20 card-interactive h-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="relative p-8 text-center h-full flex flex-col justify-center">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-green-500/20 to-green-600/30 flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-lg">
+                    <FileText className="w-10 h-10 text-green-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-green-400 transition-colors">Health Journal</h3>
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    {notesCount > 0 ? `${notesCount} notes saved` : "Track your health journey and maintain detailed records"}
+                  </p>
+                  <div className="mt-6 flex items-center justify-center text-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-sm font-medium">View Journal</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </section>
 
-        {/* Recent Conversations - Enhanced mobile layout */}
+        {/* Recent Conversations - Enhanced with modern design */}
         {recentActivity.length > 0 && (
-          <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Recent Activity">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-medium text-foreground">Recent</h2>
-              <Link href="/chat">
-                <Button
-                  variant="ghost"
-                  className="text-mcs-blue hover:bg-mcs-blue/10 font-light btn-interactive text-sm sm:text-base"
-                >
-                  View All
-                </Button>
-              </Link>
+          <section className="space-y-6 stagger-item" aria-label="Recent Activity">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Recent Conversations</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Continue where you left off with your AI healthcare specialists
+              </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {recentActivity.map((activity, index) => (
                 <Link
                   key={activity.agentId}
                   href={`/chat/${activity.agentId}`}
-                  className="stagger-item"
+                  className="stagger-item group"
                   style={{ animationDelay: `${(index + 2) * 0.1}s` }}
                 >
-                  <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 card-interactive">
-                    <CardContent className="p-4 sm:p-6">
+                  <Card className="relative overflow-hidden cursor-pointer border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5 hover:from-white/10 hover:via-white/8 hover:to-white/10 card-interactive transition-all duration-500 transform hover:scale-105 hover:shadow-xl">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <CardContent className="relative p-6">
                       <div className="flex items-center gap-4">
                         <div
-                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-lg"
                           style={{
                             backgroundColor: activity.iconColor + "20",
+                            border: `2px solid ${activity.iconColor}30`,
                           }}
                         >
-                          <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="md" />
+                          <AgentIcon iconName={activity.icon} iconColor={activity.iconColor} size="lg" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground group-hover:text-primary transition-colors text-sm sm:text-base">
+                          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg mb-1">
                             {activity.agentName}
-                          </p>
-                          <p className="text-sm text-gray-400 font-light truncate">{activity.specialty}</p>
+                          </h3>
+                          <p className="text-muted-foreground font-medium">{activity.specialty}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                            <span className="text-sm text-muted-foreground">
+                              Last active {formatTimeAgo(activity.lastMessageTime)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className="text-sm text-gray-500 font-light">
-                            {formatTimeAgo(activity.lastMessageTime)}
-                          </span>
-                          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-mcs-blue transition-colors mt-1 ml-auto" />
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <ArrowRight className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -233,47 +299,96 @@ export default function Dashboard() {
                 </Link>
               ))}
             </div>
+
+            <div className="text-center pt-4">
+              <Link href="/chat">
+                <Button variant="outline" className="px-8 py-3 border-2 border-primary/30 text-foreground hover:bg-primary/10 font-medium transition-all duration-300 transform hover:scale-105">
+                  View All Conversations
+                </Button>
+              </Link>
+            </div>
           </section>
         )}
 
-        {/* Featured Specialists - Mobile-optimized grid */}
-        <section className="space-y-4 sm:space-y-6 stagger-item" aria-label="Medical Specialists">
-                      <h2 className="text-xl sm:text-2xl font-medium text-foreground">Specialists</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {agents.slice(0, 8).map((agent, index) => (
+        {/* Featured Specialists - Enhanced with modern design */}
+        <section className="space-y-6 stagger-item" aria-label="Medical Specialists">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">AI Medical Specialists</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Connect with specialized AI healthcare professionals for personalized care
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+            {agents.slice(0, 10).map((agent, index) => (
               <Link
                 key={agent.id}
                 href={`/chat/${agent.id}`}
                 aria-label={`Chat with ${agent.name}, ${agent.specialty}`}
-                className="stagger-item"
+                className="stagger-item group"
                 style={{ animationDelay: `${(index + 5) * 0.1}s` }}
               >
-                <Card className="group cursor-pointer border-0 bg-white/5 hover:bg-white/10 card-interactive h-full">
-                  <CardContent className="p-3 sm:p-4 text-center h-full flex flex-col justify-center">
+                <Card className="relative overflow-hidden cursor-pointer border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5 hover:from-white/10 hover:via-white/8 hover:to-white/10 card-interactive h-full transition-all duration-500 transform hover:scale-105 hover:shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <CardContent className="relative p-4 text-center h-full flex flex-col justify-center">
                     <div
-                      className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                      className="w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-lg"
                       style={{
                         backgroundColor: agent.iconColor + "20",
+                        border: `2px solid ${agent.iconColor}30`,
                       }}
                     >
-                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="sm" />
+                      <AgentIcon iconName={agent.icon} iconColor={agent.iconColor} size="md" />
                     </div>
-                    <h3 className="font-medium text-foreground text-xs sm:text-sm mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                    <h3 className="font-bold text-foreground text-sm mb-1 group-hover:text-primary transition-colors line-clamp-1">
                       {agent.name}
                     </h3>
-                    <p className="text-xs text-gray-400 font-light line-clamp-2">{agent.specialty}</p>
+                    <p className="text-xs text-muted-foreground font-medium line-clamp-2 leading-relaxed">{agent.specialty}</p>
+                    <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-6 h-6 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                        <ArrowRight className="w-3 h-3 text-primary" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
 
-          <div className="text-center pt-4">
+          <div className="text-center pt-6">
             <Link href="/chat">
-              <Button variant="ghost" className="text-mcs-blue hover:bg-mcs-blue/10 font-light btn-interactive">
+              <Button variant="outline" className="px-8 py-3 border-2 border-primary/30 text-foreground hover:bg-primary/10 font-medium transition-all duration-300 transform hover:scale-105">
                 View All Specialists
               </Button>
             </Link>
+          </div>
+        </section>
+
+        {/* Call to Action Section */}
+        <section className="text-center py-12 mt-16">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 rounded-3xl -z-10"></div>
+            <div className="max-w-3xl mx-auto px-6">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
+                Ready to Start Your Health Journey?
+              </h2>
+              <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+                Join thousands of users who trust our AI-powered healthcare platform for personalized medical guidance and support.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/chat">
+                  <Button className="px-8 py-4 bg-gradient-to-r from-mcs-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    Start Your Consultation
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/groupchat">
+                  <Button variant="outline" className="px-8 py-4 border-2 border-primary/30 text-foreground hover:bg-primary/10 text-lg font-medium transition-all duration-300 transform hover:scale-105">
+                    Try Group Consultation
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </div>
