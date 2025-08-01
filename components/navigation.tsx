@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { MessageSquare, FileText, Activity, User, Command, DollarSign, Menu, X, Info, Settings, Bell, Search, ChevronDown, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { WalletConnect } from "@/components/wallet-connect"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +109,9 @@ const Navigation = () => {
 
             {/* Right Side - User Menu Dropdown */}
             <div className="flex items-center gap-2">
+              {/* Wallet Connect */}
+              <WalletConnect />
+
               {/* Command Palette Hint */}
               <div className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground bg-accent/50 rounded-lg transition-all duration-200 hover:bg-accent">
                 <Command className="h-3 w-3" />
