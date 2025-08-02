@@ -5,7 +5,6 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navigation from "@/components/navigation"
 import { CommandPaletteProvider } from "@/components/command-palette-provider"
-import { WalletProvider } from "@/contexts/WalletProvider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -197,17 +196,15 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} disableTransitionOnChange>
-          <WalletProvider>
-            <CommandPaletteProvider>
-              <div className="min-h-screen bg-background text-foreground flex flex-col">
-                <Navigation />
-                <main className="flex-1 container mx-auto py-4 px-4 md:px-6">{children}</main>
-                <footer className="py-4 border-t border-border text-center text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} MCS - Modern Care System. All rights reserved.
-                </footer>
-              </div>
-            </CommandPaletteProvider>
-          </WalletProvider>
+          <CommandPaletteProvider>
+                          <div className="min-h-screen bg-background text-foreground flex flex-col">
+              <Navigation />
+              <main className="flex-1 container mx-auto py-4 px-4 md:px-6">{children}</main>
+                              <footer className="py-4 border-t border-border text-center text-sm text-muted-foreground">
+                © {new Date().getFullYear()} MCS - Modern Care System. All rights reserved.
+              </footer>
+            </div>
+          </CommandPaletteProvider>
         </ThemeProvider>
       </body>
     </html>

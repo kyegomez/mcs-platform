@@ -1,187 +1,544 @@
 "use client"
 
-import { useWallet } from '@solana/wallet-adapter-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { WalletConnect } from '@/components/wallet-connect'
-import { SubscriptionPayment } from '@/components/subscription-payment'
-import { WalletTest } from '@/components/wallet-test'
-import { Wallet, User, Shield, Crown, Users, Calendar } from 'lucide-react'
-import { getUserSubscription, type UserSubscription } from '@/lib/subscription-system'
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { getChatAgentIds, getTotalMessageCount, getLastChatDate } from "@/lib/chat-storage"
+import { getTriggeredAlerts, dismissAlert } from "@/lib/alert-system"
+import { agents } from "@/data/agents"
+import type { Alert } from "@/types/agent"
+import {
+  MessageSquare,
+  FileText,
+  TrendingUp,
+  Heart,
+  Activity,
+  Watch,
+  Smartphone,
+  Zap,
+  Clock,
+  Bell,
+  Check,
+  AlertTriangle,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { GoalsSection } from "@/components/goals-section"
+import { SubscriptionCards } from "@/components/subscription-cards"
+
+interface HealthMetrics {
+  notesCount: number
+  specialistsCount: number
+  messagesCount: number
+  lastActivityDate: Date | null
+  healthScore: number
+  streakDays: number
+}
 
 export default function AccountPage() {
-  const { publicKey, connected } = useWallet()
-  const [subscription, setSubscription] = useState<UserSubscription>({
-    tier: "free",
-    isActive: true,
-    conversationsUsed: 0,
-    conversationsLimit: 15,
+  const [metrics, setMetrics] = useState<HealthMetrics>({
+    notesCount: 0,
+    specialistsCount: 0,
+    messagesCount: 0,
+    lastActivityDate: null,
+    healthScore: 0,
+    streakDays: 0,
   })
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [alertsExpanded, setAlertsExpanded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    const loadSubscription = () => {
-      try {
-        const loadedSubscription = getUserSubscription()
-        setSubscription(loadedSubscription)
-      } catch (error) {
-        console.error("Error loading subscription:", error)
+    const loadData = () => {
+      // Get notes count
+      const getNotes = () => {
+        try {
+          const savedNotes = localStorage.getItem("mcs-notes")
+          if (savedNotes) {
+            const parsedNotes = JSON.parse(savedNotes)
+            return parsedNotes.length
+          }
+          return 0
+        } catch (error) {
+          return 0
+        }
       }
+
+      // Calculate health score based on activity
+      const calculateHealthScore = (notes: number, specialists: number, messages: number) => {
+        let score = 0
+
+        // Notes contribute 40% (up to 40 points)
+        score += Math.min(notes * 4, 40)
+
+        // Specialists contribute 30% (up to 30 points)
+        score += Math.min(specialists * 6, 30)
+
+        // Messages contribute 30% (up to 30 points)
+        score += Math.min(messages * 2, 30)
+
+        return Math.min(score, 100)
+      }
+
+      // Calculate streak days (simplified - based on recent activity)
+      const calculateStreak = (lastDate: Date | null) => {
+        if (!lastDate) return 0
+
+        const now = new Date()
+        const diffInDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
+
+        if (diffInDays <= 1) return Math.floor(Math.random() * 7) + 1 // Simulate streak
+        return 0
+      }
+
+      const notesCount = getNotes()
+      const specialistsCount = getChatAgentIds().length
+      const messagesCount = getTotalMessageCount()
+      const lastActivityDate = getLastChatDate()
+      const healthScore = calculateHealthScore(notesCount, specialistsCount, messagesCount)
+      const streakDays = calculateStreak(lastActivityDate)
+
+      setMetrics({
+        notesCount,
+        specialistsCount,
+        messagesCount,
+        lastActivityDate,
+        healthScore,
+        streakDays,
+      })
+
+      // Load alerts
+      const triggeredAlerts = getTriggeredAlerts()
+      setAlerts(triggeredAlerts)
+
+      setIsLoaded(true)
     }
 
-    loadSubscription()
+    loadData()
+
+    const handleStorageChange = () => {
+      loadData()
+    }
+
+    // Set up interval to check for new alerts
+    const interval = setInterval(() => {
+      setAlerts(getTriggeredAlerts())
+    }, 60000) // Check every minute
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("notesUpdated", handleStorageChange)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("notesUpdated", handleStorageChange)
+    }
   }, [])
 
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-400"
+    if (score >= 60) return "text-yellow-400"
+    if (score >= 40) return "text-orange-400"
+    return "text-red-400"
+  }
+
+  const getHealthScoreLabel = (score: number) => {
+    if (score >= 80) return "Excellent"
+    if (score >= 60) return "Good"
+    if (score >= 40) return "Fair"
+    return "Needs Attention"
+  }
+
+  const markAsRead = (id: string) => {
+    dismissAlert(id)
+    setAlerts(alerts.map((alert) => (alert.id === id ? { ...alert, read: true } : alert)))
+  }
+
+  const markAllAlertsAsRead = () => {
+    alerts.forEach((alert) => {
+      if (!alert.read) {
+        dismissAlert(alert.id)
+      }
+    })
+    setAlerts(alerts.map((alert) => ({ ...alert, read: true })))
+  }
+
+  const getSeverityIcon = (severity: "low" | "medium" | "high") => {
+    switch (severity) {
+      case "high":
+        return <AlertCircle className="h-4 w-4 text-red-500" />
+      case "medium":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      case "low":
+        return <Bell className="h-4 w-4 text-mcs-blue" />
+    }
+  }
+
+  const getSeverityBadge = (severity: "low" | "medium" | "high") => {
+    switch (severity) {
+      case "high":
+        return <Badge className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border-red-500/50 text-xs">High</Badge>
+      case "medium":
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border-yellow-500/50 text-xs">
+            Medium
+          </Badge>
+        )
+      case "low":
+        return (
+          <Badge className="bg-mcs-blue/20 text-mcs-blue hover:bg-mcs-blue/30 border-mcs-blue/50 text-xs">Low</Badge>
+        )
+    }
+  }
+
+  const handleViewNote = (noteId: string) => {
+    localStorage.setItem("mcs-view-note-id", noteId)
+    router.push("/notes")
+  }
+
+  const unreadAlertsCount = alerts.filter((alert) => !alert.read).length
+
+  const integrations = [
+    {
+      name: "Apple Watch",
+      icon: Watch,
+      description: "Heart rate, activity, and sleep tracking",
+      status: "Coming Soon",
+      color: "from-gray-500 to-gray-600",
+    },
+    {
+      name: "Fitbit",
+      icon: Activity,
+      description: "Steps, workouts, and health metrics",
+      status: "Coming Soon",
+      color: "from-green-500 to-green-600",
+    },
+    {
+      name: "iPhone Health",
+      icon: Smartphone,
+      description: "Comprehensive health data sync",
+      status: "Coming Soon",
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      name: "Google Fit",
+      icon: Heart,
+      description: "Activity and wellness tracking",
+      status: "Coming Soon",
+      color: "from-red-500 to-red-600",
+    },
+    {
+      name: "MyFitnessPal",
+      icon: Zap,
+      description: "Nutrition and calorie tracking",
+      status: "Coming Soon",
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      name: "Strava",
+      icon: TrendingUp,
+      description: "Running and cycling activities",
+      status: "Coming Soon",
+      color: "from-orange-500 to-orange-600",
+    },
+  ]
+
+  if (!isLoaded) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 px-4">
+        <div className="text-center pt-8 pb-4">
+          <div className="w-24 h-6 bg-white/10 rounded mx-auto mb-2"></div>
+          <div className="w-48 h-4 bg-white/5 rounded mx-auto"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="border-0 bg-white/5">
+              <CardContent className="p-6">
+                <div className="w-full h-20 bg-white/5 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6">
+    <div className="max-w-4xl mx-auto space-y-8 px-4">
       {/* Header */}
-      <div className="text-center pt-8 pb-4">
-        <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-          Account Settings
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Manage your wallet connection and subscription
-        </p>
+      <div className="text-center pt-6 sm:pt-8 pb-4">
+        <h1 className="text-3xl sm:text-4xl font-light text-foreground mb-2">Account</h1>
+        <p className="text-muted-foreground text-base sm:text-lg font-light">Your health journey overview</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Wallet Connection */}
-        <Card className="border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="w-5 h-5" />
-              Wallet Connection
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {connected ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm font-medium text-green-400">Connected</span>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Your Phantom wallet is connected and ready for payments.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-sm font-medium text-yellow-400">Not Connected</span>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Connect your Phantom wallet to access premium features and make payments.
-                </p>
-                <WalletConnect />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Health Score Card */}
+      <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5">
+        <CardContent className="p-6 sm:p-8 text-center">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+            <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground mb-2">Health Score</h2>
+          <div className={`text-4xl sm:text-6xl font-light mb-2 ${getHealthScoreColor(metrics.healthScore)}`}>
+            {metrics.healthScore}
+          </div>
+          <p className={`text-base sm:text-lg font-medium mb-4 ${getHealthScoreColor(metrics.healthScore)}`}>
+            {getHealthScoreLabel(metrics.healthScore)}
+          </p>
+          <p className="text-muted-foreground font-light text-sm sm:text-base">Based on your activity, notes, and specialist consultations</p>
+        </CardContent>
+      </Card>
 
-        {/* Current Subscription */}
-        <Card className="border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {subscription.tier === "premium" ? (
-                <Crown className="w-5 h-5 text-yellow-500" />
-              ) : subscription.tier === "family" ? (
-                <Users className="w-5 h-5 text-purple-500" />
-              ) : (
-                <Shield className="w-5 h-5 text-blue-500" />
-              )}
-              Current Plan
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-foreground capitalize">{subscription.tier} Plan</h3>
-                <p className="text-sm text-muted-foreground">
-                  {subscription.conversationsLimit === -1 ? "Unlimited conversations" : `${subscription.conversationsLimit} conversations`}
-                </p>
-              </div>
-              <Badge variant={subscription.isActive ? "default" : "secondary"}>
-                {subscription.isActive ? "Active" : "Inactive"}
-              </Badge>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+              <FileText className="w-6 h-6 text-green-400" />
             </div>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.notesCount}</div>
+            <p className="text-muted-foreground font-light">Health Notes</p>
+          </CardContent>
+        </Card>
 
-            {subscription.renewalDate && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  Renews {new Date(subscription.renewalDate).toLocaleDateString()}
-                  {subscription.billingCycle && ` (${subscription.billingCycle})`}
-                </span>
-              </div>
-            )}
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-blue-400" />
+            </div>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.specialistsCount}</div>
+            <p className="text-muted-foreground font-light">Specialists Consulted</p>
+          </CardContent>
+        </Card>
 
-            {subscription.tier === "free" && (
-              <div className="pt-2">
-                <Button asChild className="w-full">
-                  <a href="/pricing">Upgrade Plan</a>
-                </Button>
-              </div>
-            )}
+        <Card className="border-0 bg-background/50 hover:bg-accent transition-all duration-200">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-purple-400" />
+            </div>
+            <div className="text-3xl font-light text-foreground mb-1">{metrics.streakDays}</div>
+            <p className="text-muted-foreground font-light">Day Streak</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Wallet Test (Temporary for debugging) */}
-      <WalletTest />
+      {/* Subscription Cards */}
+      <SubscriptionCards />
 
-      {/* Subscription Management */}
-      {connected && (
-        <Card className="border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5">
-          <CardHeader>
-            <CardTitle>Subscription Management</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SubscriptionPayment />
-          </CardContent>
-        </Card>
-      )}
+      {/* Goals Section */}
+      <GoalsSection />
 
-      {/* Account Information */}
-      <Card className="border-0 bg-gradient-to-br from-white/5 via-white/3 to-white/5">
+      {/* Alerts Section */}
+      <Card className="border-0 bg-background/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Account Information
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-mcs-blue" />
+              <CardTitle className="text-foreground font-medium">Alerts & Notifications</CardTitle>
+              {unreadAlertsCount > 0 && (
+                <Badge className="bg-primary text-primary-foreground text-xs">{unreadAlertsCount} new</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {unreadAlertsCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={markAllAlertsAsRead}
+                  className="text-muted-foreground hover:text-foreground text-xs"
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Mark all read
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAlertsExpanded(!alertsExpanded)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {alertsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {alerts.length === 0 ? (
+            <div className="text-center py-6">
+              <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground font-light">No alerts at this time</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Show first 2 alerts by default, all when expanded */}
+              {(alertsExpanded ? alerts : alerts.slice(0, 2)).map((alert) => {
+                const agent = agents.find((a) => a.id === alert.agentId)
+                return (
+                  <div
+                    key={alert.id}
+                    className={`p-4 rounded-lg ${
+                      !alert.read ? "bg-mcs-blue/10 border border-mcs-blue/20" : "bg-background/50"
+                    } transition-all duration-200`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-3">
+                        {getSeverityIcon(alert.severity)}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-foreground text-sm">{alert.title}</h4>
+                            {!alert.read && <span className="h-1.5 w-1.5 rounded-full bg-mcs-blue"></span>}
+                          </div>
+                          <p className="text-muted-foreground text-sm font-light mb-2">{alert.description}</p>
+                          <div className="flex items-center gap-2">
+                            {getSeverityBadge(alert.severity)}
+                            <span className="text-xs text-muted-foreground/70">
+                              {alert.createdAt.toLocaleDateString()} at{" "}
+                              {alert.createdAt.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {!alert.read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => markAsRead(alert.id)}
+                          className="text-muted-foreground hover:text-foreground p-1"
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 mt-3">
+                      {alert.noteId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewNote(alert.noteId!)}
+                          className="text-xs border-border/50 text-foreground hover:bg-accent"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          View Note
+                        </Button>
+                      )}
+
+                      {agent && (
+                        <Link href={`/chat/${agent.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs border-border/50 text-foreground hover:bg-accent"
+                          >
+                            Chat with {agent.name}
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {!alertsExpanded && alerts.length > 2 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAlertsExpanded(true)}
+                  className="w-full text-muted-foreground hover:text-foreground text-sm"
+                >
+                  Show {alerts.length - 2} more alerts
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Activity Summary */}
+      <Card className="border-0 bg-background/50">
+        <CardHeader>
+          <CardTitle className="text-foreground font-medium flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-mcs-blue" />
+            Activity Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center justify-between py-2">
+            <span className="text-muted-foreground font-light">Total Messages</span>
+            <span className="text-foreground font-medium">{metrics.messagesCount}</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-muted-foreground font-light">Last Activity</span>
+            <span className="text-foreground font-medium">
+              {metrics.lastActivityDate ? metrics.lastActivityDate.toLocaleDateString() : "No activity yet"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-muted-foreground font-light">Account Created</span>
+            <span className="text-foreground font-medium">{new Date().toLocaleDateString()}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Integrations Coming Soon */}
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl sm:text-2xl font-light text-foreground mb-2">Integrations</h2>
+          <p className="text-muted-foreground font-light text-sm sm:text-base">Connect your favorite health apps and devices</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {integrations.map((integration) => {
+            const IconComponent = integration.icon
+            return (
+              <Card
+                key={integration.name}
+                className="border-0 bg-background/50 hover:bg-accent transition-all duration-200 group"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${integration.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <IconComponent className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-foreground mb-1">{integration.name}</h3>
+                      <p className="text-sm text-muted-foreground font-light mb-2">{integration.description}</p>
+                      <Badge variant="outline" className="text-xs border-mcs-blue/30 text-mcs-blue bg-mcs-blue/10">
+                        {integration.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+
+        <div className="text-center pt-4">
+          <p className="text-muted-foreground/70 font-light text-sm">More integrations coming soon. Stay tuned for updates!</p>
+        </div>
+      </div>
+
+      {/* Account Actions */}
+      <Card className="border-0 bg-background/50">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Account Type</label>
-              <p className="text-foreground">Web3 Wallet</p>
+              <h3 className="font-medium text-foreground mb-1">Account Settings</h3>
+              <p className="text-sm text-muted-foreground font-light">Manage your preferences and data</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Connection Status</label>
-              <p className="text-foreground">{connected ? "Connected" : "Not Connected"}</p>
-            </div>
-            {connected && (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Wallet Address</label>
-                  <p className="text-foreground font-mono text-sm">
-                    {publicKey?.toString()}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Network</label>
-                  <p className="text-foreground">Solana Devnet</p>
-                </div>
-              </>
-            )}
+            <Button variant="outline" className="border-border/50 text-foreground hover:bg-accent">
+              Settings
+            </Button>
           </div>
         </CardContent>
       </Card>
