@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { VoiceProcessor } from "@/components/voice-processor"
 import { ModelSelector } from "@/components/model-selector"
 import { useModelSelection } from "@/hooks/use-model-selection"
-import { runMedicalGroupChat } from "@/lib/medical-groupchat-api"
+import { selectAgent, loadAgentFromPrompt } from "@/lib/orchestrator-api"
 
 import { MarkdownContent } from "@/components/markdown-content"
 
@@ -20,32 +20,21 @@ interface GroupChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  agentOutputs?: Array<{
-    role: string
-    content: string
-  }>
+  selectedAgent?: {
+    name: string
+    specialty: string
+    iconColor: string
+  }
+  orchestratorReasoning?: string
+  confidence?: number
+  orchestratorData?: {
+    selectedAgent: string
+    reasoning: string
+    confidence: number
+    agentInfo: any
+  }
 }
 
-const medicalAgents = [
-  {
-    name: "Medical Diagnoser",
-    icon: <Stethoscope className="h-4 w-4" />,
-    iconColor: "#3B82F6",
-    description: "Comprehensive Diagnosis",
-  },
-  {
-    name: "Medical Verifier",
-    icon: <Brain className="h-4 w-4" />,
-    iconColor: "#10B981", 
-    description: "Diagnostic Validation",
-  },
-  {
-    name: "Treatment Specialist",
-    icon: <Pill className="h-4 w-4" />,
-    iconColor: "#F59E0B",
-    description: "Treatment Planning",
-  },
-]
 
 export default function GroupChatConsultationPage() {
   const router = useRouter()
@@ -84,7 +73,7 @@ export default function GroupChatConsultationPage() {
       const welcomeMessage: GroupChatMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: "Hello! I'm your medical group consultation team. We have three specialists ready to help: a Medical Diagnoser, Medical Verifier, and Treatment Specialist. Please describe your symptoms or health concerns, and we'll work together to provide you with comprehensive care.",
+        content: "Hello! I'm your AI medical consultation system with dynamic specialist selection. I'll analyze your symptoms and automatically connect you with the most appropriate specialist from our team of 25+ medical experts. Please describe your health concerns, and I'll select the best specialist to help you.",
         timestamp: new Date(),
       }
       setMessages([welcomeMessage])
@@ -132,63 +121,125 @@ export default function GroupChatConsultationPage() {
     setInput("")
     setIsLoading(true)
 
-    // Add processing message
-    const processingMessage: GroupChatMessage = {
-      id: uuidv4(),
-      role: "assistant",
-      content: "Medical team processing your request...",
-      timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, processingMessage])
-
     try {
       // Create history array with all previous messages plus the new user message
       const historyForApi = [...messages, userMessage].map((msg) => ({
+        id: msg.id,
         role: msg.role,
         content: msg.content,
+        timestamp: msg.timestamp,
       }))
 
-      // Use the medical groupchat API
-      const response = await runMedicalGroupChat(currentInput, historyForApi, selectedModel)
-      
-      // Extract the response content and agent outputs
+      // Step 1: Show orchestrator analysis
+      const orchestratorProcessingMessage: GroupChatMessage = {
+        id: uuidv4(),
+        role: "assistant",
+        content: "🤖 Analyzing your symptoms and selecting the most appropriate specialist...",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, orchestratorProcessingMessage])
+
+      // Step 2: Call orchestrator to select agent
+      console.log("Starting orchestrator selection...")
+      const orchestratorResult = await selectAgent(currentInput, historyForApi)
+      console.log("Orchestrator result:", orchestratorResult)
+
+      // Step 3: Load the selected agent
+      const selectedAgent = await loadAgentFromPrompt(orchestratorResult.selectedAgent)
+
+      // Step 4: Replace processing with orchestrator result
+      const orchestratorMessage: GroupChatMessage = {
+        id: uuidv4(),
+        role: "assistant",
+        content: "Orchestrator Analysis Complete",
+        timestamp: new Date(),
+        selectedAgent: {
+          name: selectedAgent.name,
+          specialty: selectedAgent.specialty,
+          iconColor: selectedAgent.iconColor
+        },
+        orchestratorReasoning: orchestratorResult.reasoning,
+        confidence: orchestratorResult.confidence || 0,
+        orchestratorData: {
+          selectedAgent: selectedAgent.name,
+          reasoning: orchestratorResult.reasoning || '',
+          confidence: orchestratorResult.confidence || 0,
+          agentInfo: selectedAgent
+        }
+      }
+
+      setMessages((prev) => {
+        const messagesWithoutProcessing = prev.filter(msg => msg.content !== "🤖 Analyzing your symptoms and selecting the most appropriate specialist...")
+        return [...messagesWithoutProcessing, orchestratorMessage]
+      })
+
+      // Step 5: Add agent processing message
+      const agentProcessingMessage: GroupChatMessage = {
+        id: uuidv4(),
+        role: "assistant", 
+        content: `${selectedAgent.name} is analyzing your case...`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, agentProcessingMessage])
+
+      // Step 6: Call the agent API
+      console.log("Starting agent chat...")
+      const chatResponse = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          agent_config: {
+            agent_name: selectedAgent.name,
+            description: selectedAgent.description,
+            system_prompt: selectedAgent.systemPrompt,
+            model_name: selectedModel || "claude-sonnet-4-20250514",
+            role: "worker",
+            max_loops: 1,
+            max_tokens: 8192,
+            temperature: 0.7,
+            auto_generate_prompt: false,
+          },
+          task: currentInput,
+          history: historyForApi.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+      })
+
+      if (!chatResponse.ok) {
+        throw new Error(`Chat API error: ${chatResponse.status}`)
+      }
+
+      const chatData = await chatResponse.json()
+
+      // Step 7: Extract the agent response content
       let fullResponse = ""
-      let agentOutputs: Array<{ role: string; content: string }> = []
-
-      if (response && response.output && Array.isArray(response.output)) {
-        // Extract individual agent outputs
-        agentOutputs = response.output.map((output: any) => ({
-          role: output.role,
-          content: output.content,
-        }))
-
-        // Sort agents in the correct sequential order: Diagnoser -> Verifier -> Treatment
-        const agentOrder = ["Medical Diagnoser", "Medical Verifier", "Treatment Specialist"]
-        agentOutputs.sort((a, b) => {
-          const aIndex = agentOrder.indexOf(a.role)
-          const bIndex = agentOrder.indexOf(b.role)
-          return aIndex - bIndex
-        })
-
-        // For individual agent outputs, we don't need a combined response
-        fullResponse = "Medical consultation completed by our specialist team."
-      } else if (typeof response === "string") {
-        fullResponse = response
+      if (chatData && chatData.processedOutput) {
+        fullResponse = chatData.processedOutput
+      } else if (typeof chatData === "string") {
+        fullResponse = chatData
       } else {
         fullResponse = "I processed your request, but didn't receive a response. Please try again."
       }
 
-      // Replace the processing message with the actual response
+      // Step 8: Replace agent processing with actual response
       setMessages((prev) => {
-        const messagesWithoutProcessing = prev.filter(msg => msg.content !== "Medical team processing your request...")
-        const assistantMessage: GroupChatMessage = {
+        const messagesWithoutProcessing = prev.filter(msg => msg.content !== `${selectedAgent.name} is analyzing your case...`)
+        const agentMessage: GroupChatMessage = {
           id: uuidv4(),
           role: "assistant",
           content: fullResponse || "I processed your request, but didn't receive a response. Please try again.",
           timestamp: new Date(),
-          agentOutputs: agentOutputs.length > 0 ? agentOutputs : undefined,
+          selectedAgent: {
+            name: selectedAgent.name,
+            specialty: selectedAgent.specialty,
+            iconColor: selectedAgent.iconColor
+          },
         }
-        return [...messagesWithoutProcessing, assistantMessage]
+        return [...messagesWithoutProcessing, agentMessage]
       })
 
       // Speak the response if voice is enabled
@@ -220,7 +271,7 @@ export default function GroupChatConsultationPage() {
     const welcomeMessage: GroupChatMessage = {
       id: uuidv4(),
       role: "assistant",
-      content: "Hello! I'm your medical group consultation team. We have three specialists ready to help: a Medical Diagnoser, Medical Verifier, and Treatment Specialist. Please describe your symptoms or health concerns, and we'll work together to provide you with comprehensive care.",
+      content: "Hello! I'm your AI medical consultation system with dynamic specialist selection. I'll analyze your symptoms and automatically connect you with the most appropriate specialist from our team of 15+ medical experts. Please describe your health concerns, and I'll select the best specialist to help you.",
       timestamp: new Date(),
     }
 
@@ -254,8 +305,8 @@ export default function GroupChatConsultationPage() {
                 <div className="absolute -bottom-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 rounded-full status-online border-2 border-black"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-lg sm:text-xl text-foreground truncate">Medical Group Consultation</h1>
-                <p className="text-xs sm:text-sm text-mcs-blue truncate">3 AI Specialists • Collaborative Care</p>
+                <h1 className="font-bold text-lg sm:text-xl text-foreground truncate">AI Medical Consultation</h1>
+                <p className="text-xs sm:text-sm text-mcs-blue truncate">Dynamic Specialist Selection • 15+ Experts</p>
               </div>
             </div>
           </div>
@@ -301,93 +352,110 @@ export default function GroupChatConsultationPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto mb-4 pr-2 space-y-6">
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-4 chat-bubble-animation ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-          >
-            <div className="flex-shrink-0">
-              <div
-                className={`h-8 w-8 rounded-xl flex items-center justify-center ${
-                  message.role === "user" ? "bg-gradient-to-r from-mcs-blue to-mcs-blue-light" : "border"
-                }`}
-                style={
-                  message.role === "assistant"
-                    ? {
-                        borderColor: "#3B82F6" + "30",
-                        backgroundColor: "#3B82F6" + "10",
-                      }
-                    : {}
-                }
-              >
-                {message.role === "user" ? (
-                  <User className="h-4 w-4 text-foreground" />
-                ) : (
-                  <Users className="h-4 w-4 text-primary" />
-                )}
-              </div>
-            </div>
-
-            <div className={`max-w-[80%] ${message.role === "user" ? "text-right" : "text-left"}`}>
-              <div
-                className={`glass-card p-4 rounded-2xl ${
-                  message.role === "user"
-                    ? "bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 border-mcs-blue/30"
-                    : "border-white/10"
-                }`}
-              >
-                {/* Display message content only if no individual agent outputs */}
-                {(!message.agentOutputs || message.agentOutputs.length === 0) && (
-                  <div className="whitespace-pre-wrap text-foreground leading-relaxed">{message.content}</div>
-                )}
-                
-                {/* Show individual agent outputs if available */}
-                {message.agentOutputs && message.agentOutputs.length > 0 && (
-                  <div className="mt-6 space-y-4">
-                    {message.agentOutputs.map((output, index) => {
-                      const agent = medicalAgents.find(a => a.name === output.role)
-                      return (
-                        <div 
-                          key={index} 
-                          className="glass-card p-4 rounded-xl border border-white/10 agent-card-enter"
-                          style={{ 
-                            animationDelay: `${index * 0.2}s`,
-                            borderColor: agent?.iconColor + "30",
-                            backgroundColor: agent?.iconColor + "05"
-                          }}
-                        >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div 
-                              className="w-10 h-10 rounded-xl flex items-center justify-center border-2 agent-icon-hover"
-                              style={{ 
-                                backgroundColor: agent?.iconColor + "20",
-                                borderColor: agent?.iconColor + "30"
-                              }}
-                            >
-                              <div style={{ color: agent?.iconColor }}>
-                                {agent?.icon}
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-foreground">{output.role}</h4>
-                              <p className="text-xs text-muted-foreground">{agent?.description}</p>
-                            </div>
-                          </div>
-                          <div className="text-foreground">
-                            <MarkdownContent content={output.content} />
-                          </div>
-                        </div>
-                      )
+          <div key={message.id} className="space-y-4 chat-bubble-animation">
+            {/* User Message */}
+            {message.role === "user" && (
+              <div className="flex gap-4 flex-row-reverse">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-r from-mcs-blue to-mcs-blue-light">
+                    <User className="h-4 w-4 text-foreground" />
+                  </div>
+                </div>
+                <div className="max-w-[80%] text-right">
+                  <div className="glass-card p-4 rounded-2xl bg-gradient-to-r from-mcs-blue/20 to-mcs-blue-light/20 border-mcs-blue/30">
+                    <div className="whitespace-pre-wrap text-foreground leading-relaxed">{message.content}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground/70 mt-2 px-2">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Assistant Response */}
+            {message.role === "assistant" && (
+              <div className="space-y-3">
+                {/* Orchestrator-only Message */}
+                {message.orchestratorData && message.content === "Orchestrator Analysis Complete" && (
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10">
+                        <Brain className="h-4 w-4 text-purple-400" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="glass-card p-4 rounded-2xl border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm font-semibold text-foreground">Orchestrator</span>
+                          <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                            COMPLETE
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-sm text-muted-foreground">
+                            <span className="font-medium">Agent chosen:</span> {message.selectedAgent?.name}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <span className="font-medium">Rationale:</span> {message.orchestratorReasoning}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Processing Messages */}
+                {(message.content.includes("analyzing") || message.content.includes("processing")) && (
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10">
+                        <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="glass-card p-4 rounded-2xl border-white/10">
+                        <div className="text-sm text-muted-foreground">
+                          {message.content}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Agent Response Panel */}
+                {!message.orchestratorData && !message.content.includes("analyzing") && !message.content.includes("processing") && (
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div 
+                        className="h-8 w-8 rounded-xl flex items-center justify-center border"
+                        style={{
+                          borderColor: message.selectedAgent?.iconColor + "30" || "#3B82F6" + "30",
+                          backgroundColor: message.selectedAgent?.iconColor + "10" || "#3B82F6" + "10",
+                        }}
+                      >
+                        <Stethoscope className="h-4 w-4" style={{ color: message.selectedAgent?.iconColor || "#3B82F6" }} />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="glass-card p-4 rounded-2xl border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm font-semibold text-foreground">{message.selectedAgent?.name || "AI Assistant"}</span>
+                          <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">
+                            RESPONDING
+                          </span>
+                        </div>
+                        <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                          <MarkdownContent content={message.content} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-              <div className="text-xs text-muted-foreground/70 mt-2 px-2">
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
+            )}
           </div>
         ))}
 

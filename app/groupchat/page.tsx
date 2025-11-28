@@ -26,10 +26,10 @@ export default function GroupChatIndexPage() {
             </div>
             <div className="space-y-4">
               <h1 className="text-5xl font-light tracking-tight text-foreground">
-                Group Consultation
+                AI Medical Consultation
               </h1>
               <p className="text-xl text-muted-foreground font-light max-w-lg mx-auto leading-relaxed">
-                Multiple AI specialists collaborate to provide comprehensive medical insights.
+                Dynamic specialist selection from 25+ medical experts powered by Claude 4 Sonnet.
               </p>
             </div>
           </div>

@@ -692,3 +692,44 @@ html {
   transform: scale(1.1) rotate(5deg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* ChatGPT-style Content Styling */
+.chatgpt-style {
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.chatgpt-style h1,
+.chatgpt-style h2,
+.chatgpt-style h3,
+.chatgpt-style h4 {
+  scroll-margin-top: 1rem;
+}
+
+.chatgpt-style ul,
+.chatgpt-style ol {
+  padding-left: 0;
+}
+
+.chatgpt-style li {
+  line-height: 1.5;
+}
+
+.chatgpt-style p:last-child {
+  margin-bottom: 0;
+}
+
+.chatgpt-style ul:last-child,
+.chatgpt-style ol:last-child {
+  margin-bottom: 0;
+}
+
+/* Clean, minimal styling like ChatGPT */
+.chatgpt-style strong {
+  font-weight: 600;
+}
+
+.chatgpt-style code {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875em;
+}
