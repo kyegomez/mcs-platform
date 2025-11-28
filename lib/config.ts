@@ -1,6 +1,6 @@
 // API configuration
 export const SWARMS_API_CONFIG = {
-  BASE_URL: "https://swarms-api-285321057562.us-east1.run.app",
+  BASE_URL: "https://api.swarms.world",
   API_KEY: process.env.SWARMS_API_KEY || "",
 }
 

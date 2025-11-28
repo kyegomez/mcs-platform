@@ -1,7 +1,7 @@
 import type { Agent, ChatMessage } from "@/types/agent"
 
 // Update the base URL
-const SWARMS_API_URL = "https://swarms-api-285321057562.us-east1.run.app"
+const SWARMS_API_URL = "https://api.swarms.world"
 
 export async function chatWithAgent(agent: Agent, message: string, history: ChatMessage[], selectedModel?: string) {
   try {
